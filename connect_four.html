@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>コネクトフォー — 7×6 重力四目</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap');
+
+  :root{
+    --bg-0: #050505;
+    --bg-1: #0e0e0e;
+    --frame-hi: #2a2a2a;
+    --frame-mid: #141414;
+    --frame-low: #030303;
+    --void: #060606;
+    --void-rim: #2a2a2a;
+    --ivory-hi: #ffffff;
+    --ivory-mid: #f2efe6;
+    --ivory-low: #b8b3a4;
+    --ebony-hi: #4a4a4a;
+    --ebony-mid: #232323;
+    --ebony-low: #000000;
+    --silver: #cfcfcf;
+    --silver-dim: #6f6f6f;
+    --paper: #f5f3ee;
+    --ink: #141414;
+    --hairline: rgba(255,255,255,0.14);
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 50% -10%, #1c1c1c 0%, #0a0a0a 55%, #000000 100%);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    color: var(--paper);
+    display:flex;
+    justify-content:center;
+    padding: 18px 12px 40px;
+  }
+
+  .app{
+    width:100%;
+    max-width: 560px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+
+  header{ text-align:center; margin-top:2px; }
+  h1{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size: clamp(1.5rem, 6vw, 2rem);
+    letter-spacing: 0.06em;
+    margin:0;
+    color:#fff;
+    text-shadow: 0 2px 10px rgba(255,255,255,0.12);
+  }
+  h1 .small{
+    display:block;
+    font-size:0.6rem;
+    letter-spacing:0.42em;
+    font-weight:500;
+    color:var(--silver-dim);
+    margin-top:8px;
+    text-transform: uppercase;
+  }
+
+  /* --- turn indicator --- */
+  .turn-wrap{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    min-height:44px;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    padding: 10px 22px;
+  }
+  .turn-chip{
+    width:32px; height:32px;
+    border-radius:50%;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.5), 0 5px 10px rgba(0,0,0,0.5), inset 0 3px 4px rgba(255,255,255,0.5), inset 0 -4px 6px rgba(0,0,0,0.3);
+    transition: background .2s ease;
+  }
+  .turn-chip.white{ background: radial-gradient(circle at 35% 30%, var(--ivory-hi), var(--ivory-mid) 55%, var(--ivory-low)); }
+  .turn-chip.black{ background: radial-gradient(circle at 35% 30%, var(--ebony-hi), var(--ebony-mid) 55%, var(--ebony-low)); box-shadow: 0 2px 0 rgba(0,0,0,0.5), 0 5px 10px rgba(0,0,0,0.5), inset 0 3px 4px rgba(255,255,255,0.15), inset 0 -4px 6px rgba(0,0,0,0.6), 0 0 0 1px var(--silver-dim); }
+  .turn-chip.pulse{ animation: pop .3s ease; }
+  @keyframes pop{
+    0%{ transform: scale(0.5); opacity:0.4; }
+    60%{ transform: scale(1.15); }
+    100%{ transform: scale(1); }
+  }
+  .turn-label{
+    font-family:'Kaisei Decol', serif;
+    font-weight:500;
+    font-size:1rem;
+    letter-spacing:0.08em;
+  }
+  .status-text{ font-size:0.7rem; color:var(--silver-dim); letter-spacing:0.06em; margin-top:2px; }
+
+  /* --- scoreboard --- */
+  .score-row{
+    display:flex;
+    gap:24px;
+    font-size:0.75rem;
+    letter-spacing: 0.06em;
+  }
+  .score-pill{
+    display:flex; align-items:center; gap:8px;
+    color: var(--silver);
+  }
+  .score-pill .dot{ width:12px; height:12px; border-radius:50%; }
+  .score-pill .dot.white{ background: var(--ivory-mid); box-shadow: 0 0 0 1px var(--silver-dim); }
+  .score-pill .dot.black{ background: var(--ebony-mid); box-shadow: 0 0 0 1px var(--silver-dim); }
+  .score-pill b{ font-family:'Kaisei Decol', serif; color:#fff; font-size:0.95rem; }
+
+  /* --- board frame --- */
+  .board-frame{
+    position:relative;
+    padding: 16px 16px 24px;
+    background: linear-gradient(160deg, var(--frame-hi), var(--frame-mid) 45%, var(--frame-low));
+    border-radius: 4px;
+    box-shadow:
+      0 20px 40px rgba(0,0,0,0.7),
+      inset 0 1px 0 rgba(255,255,255,0.15),
+      inset 0 0 0 1px rgba(255,255,255,0.06);
+  }
+
+  .col-buttons{
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    width: min(420px, 82vw);
+    margin-bottom: 8px;
+  }
+  .col-btn{
+    height: 24px;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    background: transparent;
+    color: var(--silver-dim);
+    cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size: 0.75rem;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  .col-btn:hover:not(:disabled){ color: #fff; border-color: var(--hairline); }
+  .col-btn:disabled{ opacity:0.2; cursor:default; }
+  .col-btn:focus-visible{ outline: 1px solid #fff; outline-offset:2px; }
+
+  .board{
+    position:relative;
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    width: min(420px, 82vw);
+    height: calc(min(420px, 82vw) * 6 / 7);
+    background: var(--void);
+    border-radius: 2px;
+    box-shadow: inset 0 4px 14px rgba(0,0,0,0.85), inset 0 0 0 1px var(--void-rim);
+    overflow: hidden;
+  }
+  .cell{
+    position:relative;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .hole{
+    width:78%; height:78%;
+    border-radius:50%;
+    background: var(--void);
+    box-shadow: inset 0 3px 7px rgba(0,0,0,0.9), inset 0 -1px 2px rgba(255,255,255,0.04), 0 1px 0 rgba(255,255,255,0.03);
+  }
+
+  .chip-layer{
+    position:absolute; inset:0;
+    display:grid;
+    grid-template-columns: repeat(7, 1fr);
+    grid-template-rows: repeat(6, 1fr);
+    pointer-events:none;
+  }
+  .chip{
+    width:78%; height:78%;
+    justify-self:center; align-self:center;
+    border-radius:50%;
+    animation: drop 0.42s cubic-bezier(.5,0,.85,.55) both;
+  }
+  .chip.white{
+    background: radial-gradient(circle at 35% 28%, var(--ivory-hi), var(--ivory-mid) 55%, var(--ivory-low));
+    box-shadow: 0 3px 0 rgba(0,0,0,0.4), 0 6px 10px rgba(0,0,0,0.5), inset 0 4px 5px rgba(255,255,255,0.7), inset 0 -5px 8px rgba(0,0,0,0.15);
+  }
+  .chip.black{
+    background: radial-gradient(circle at 35% 28%, var(--ebony-hi), var(--ebony-mid) 55%, var(--ebony-low));
+    box-shadow: 0 3px 0 rgba(0,0,0,0.5), 0 6px 10px rgba(0,0,0,0.6), inset 0 4px 5px rgba(255,255,255,0.18), inset 0 -5px 8px rgba(0,0,0,0.5), 0 0 0 1px var(--silver-dim);
+  }
+  .chip.win{ animation: drop 0.42s cubic-bezier(.5,0,.85,.55) both, glow 1.1s ease-in-out 0.42s infinite; }
+  @keyframes drop{
+    from{ transform: translateY(var(--drop-from, -600%)); }
+    to{ transform: translateY(0); }
+  }
+  @keyframes glow{
+    0%,100%{ box-shadow: 0 0 0 0 rgba(255,255,255,0.5); }
+    50%{ box-shadow: 0 0 16px 6px rgba(255,255,255,0.65); }
+  }
+
+  .controls{ display:flex; gap:12px; margin-top:2px; }
+  button.main-btn{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.76rem;
+    letter-spacing:0.1em;
+    color:#fff;
+    background: transparent;
+    border: 1px solid var(--silver-dim);
+    border-radius:2px;
+    padding: 10px 20px;
+    cursor:pointer;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  button.main-btn:hover{ background: rgba(255,255,255,0.06); border-color:#fff; }
+  button.main-btn:active{ transform: translateY(1px); }
+  button:focus-visible{ outline: 1px solid #fff; outline-offset: 3px; }
+
+  .rules{
+    width:100%;
+    max-width: 420px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--hairline);
+    border-radius: 2px;
+    padding: 14px 18px;
+    font-size:0.76rem;
+    line-height:1.8;
+    color:#cfcfcf;
+    display:none;
+  }
+  .rules.open{ display:block; }
+  .rules h2{
+    font-family:'Kaisei Decol', serif;
+    font-weight:500;
+    font-size:0.9rem;
+    margin: 0 0 8px;
+    color:#fff;
+    letter-spacing: 0.05em;
+  }
+  .rules ul{ margin:4px 0; padding-left:1.1em; }
+
+  .winner-overlay{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,0.82);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:20;
+    padding: 20px;
+  }
+  .winner-overlay.show{ display:flex; }
+  .winner-card{
+    background: linear-gradient(180deg, #161616, #050505);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 32px 34px;
+    text-align:center;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    max-width: 300px;
+  }
+  .winner-card .big{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:1.3rem;
+    color:#fff;
+    margin-bottom:10px;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    letter-spacing: 0.04em;
+  }
+  .winner-card p{ color:var(--silver-dim); font-size:0.8rem; margin: 0 0 20px; letter-spacing:0.04em; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <h1>コネクトフォー<span class="small">Connect Four · 7 × 6 Gravity</span></h1>
+  </header>
+
+  <div class="turn-wrap">
+    <div id="turnChip" class="turn-chip white"></div>
+    <div>
+      <div id="turnLabel" class="turn-label">白 の番</div>
+      <div id="statusText" class="status-text">列を選んでコインを落としてください</div>
+    </div>
+  </div>
+
+  <div class="score-row">
+    <div class="score-pill"><span class="dot white"></span>白 <b id="whiteScore">0</b></div>
+    <div class="score-pill"><span class="dot black"></span>黒 <b id="blackScore">0</b></div>
+  </div>
+
+  <div class="board-frame">
+    <div id="colButtons" class="col-buttons"></div>
+    <div style="position:relative;">
+      <div id="board" class="board"></div>
+      <div id="chipLayer" class="chip-layer"></div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button id="newGameBtn" class="main-btn">はじめから</button>
+    <button id="rulesBtn" class="main-btn">遊び方</button>
+  </div>
+
+  <div id="rules" class="rules">
+    <h2>遊び方</h2>
+    <ul>
+      <li>7列×6段の盤に、交互にコインを落とします</li>
+      <li>コインは列の一番下の空きマスまで重力で落ちます</li>
+      <li>縦・横・斜め、どちらの向きでも4つ並べたら勝利です</li>
+      <li>全マスが埋まって誰も揃わなければ引き分けです</li>
+      <li>スコアは「はじめから」を押すまで対局をまたいで記録されます</li>
+    </ul>
+  </div>
+
+</div>
+
+<div id="winnerOverlay" class="winner-overlay">
+  <div class="winner-card">
+    <div id="winnerText" class="big">白の勝ち！</div>
+    <p id="winnerSub">4つ並びました</p>
+    <button id="againBtn" class="main-btn">次の対局へ</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const COLS = 7, ROWS = 6;
+  let grid, turn, gameOver, colHeights, score;
+
+  function resetBoard(){
+    grid = Array.from({length:ROWS}, () => Array(COLS).fill(null));
+    colHeights = Array(COLS).fill(0);
+    turn = 'white';
+    gameOver = false;
+    document.getElementById('chipLayer').innerHTML = '';
+    document.getElementById('winnerOverlay').classList.remove('show');
+    renderBoardHoles();
+    renderColButtons();
+    updateTurnUI(false);
+  }
+
+  function resetAll(){
+    score = { white:0, black:0 };
+    updateScoreUI();
+    resetBoard();
+  }
+
+  function renderBoardHoles(){
+    const boardEl = document.getElementById('board');
+    boardEl.innerHTML = '';
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        const hole = document.createElement('div');
+        hole.className = 'hole';
+        cell.appendChild(hole);
+        boardEl.appendChild(cell);
+      }
+    }
+  }
+
+  function renderColButtons(){
+    const wrap = document.getElementById('colButtons');
+    wrap.innerHTML = '';
+    for(let c=0;c<COLS;c++){
+      const btn = document.createElement('button');
+      btn.className = 'col-btn';
+      btn.textContent = '▼';
+      btn.setAttribute('aria-label', (c+1) + '列目に落とす');
+      btn.addEventListener('click', () => dropInColumn(c));
+      wrap.appendChild(btn);
+    }
+  }
+
+  function updateColButtonsState(){
+    const btns = document.querySelectorAll('.col-btn');
+    btns.forEach((btn, c) => {
+      btn.disabled = gameOver || colHeights[c] >= ROWS;
+    });
+  }
+
+  function updateTurnUI(pulse){
+    const chip = document.getElementById('turnChip');
+    const label = document.getElementById('turnLabel');
+    chip.className = 'turn-chip ' + turn + (pulse ? ' pulse' : '');
+    if(pulse){ void chip.offsetWidth; chip.classList.add('pulse'); }
+    label.textContent = (turn === 'white' ? '白' : '黒') + ' の番';
+    document.getElementById('statusText').textContent = gameOver ? '対局終了' : '列を選んでコインを落としてください';
+    updateColButtonsState();
+  }
+
+  function updateScoreUI(){
+    document.getElementById('whiteScore').textContent = score.white;
+    document.getElementById('blackScore').textContent = score.black;
+  }
+
+  function dropInColumn(c){
+    if(gameOver) return;
+    if(colHeights[c] >= ROWS) return;
+    const r = ROWS - 1 - colHeights[c];
+    grid[r][c] = turn;
+    colHeights[c]++;
+
+    const chipEl = document.createElement('div');
+    chipEl.className = 'chip ' + turn;
+    chipEl.style.gridRowStart = r + 1;
+    chipEl.style.gridColumnStart = c + 1;
+    chipEl.style.setProperty('--drop-from', (-(r+1) * 128) + '%');
+    document.getElementById('chipLayer').appendChild(chipEl);
+
+    const win = checkWin(r, c, turn);
+    if(win){
+      win.forEach(([wr,wc]) => {
+        const chips = document.querySelectorAll('.chip');
+        chips.forEach(el => {
+          if(parseInt(el.style.gridRowStart) === wr+1 && parseInt(el.style.gridColumnStart) === wc+1){
+            el.classList.add('win');
+          }
+        });
+      });
+      gameOver = true;
+      score[turn]++;
+      updateScoreUI();
+      showWinner(turn, false);
+      updateTurnUI(false);
+      return;
+    }
+
+    if(colHeights.every(h => h >= ROWS)){
+      gameOver = true;
+      showWinner(null, true);
+      updateTurnUI(false);
+      return;
+    }
+
+    turn = turn === 'white' ? 'black' : 'white';
+    updateTurnUI(true);
+  }
+
+  function checkWin(r, c, player){
+    const dirs = [
+      [[0,1],[0,-1]],
+      [[1,0],[-1,0]],
+      [[1,1],[-1,-1]],
+      [[1,-1],[-1,1]],
+    ];
+    for(const pair of dirs){
+      let line = [[r,c]];
+      for(const [dr,dc] of pair){
+        let nr=r+dr, nc=c+dc;
+        while(nr>=0 && nr<ROWS && nc>=0 && nc<COLS && grid[nr][nc] === player){
+          line.push([nr,nc]);
+          nr+=dr; nc+=dc;
+        }
+      }
+      if(line.length >= 4) return line;
+    }
+    return null;
+  }
+
+  function showWinner(winner, draw){
+    const overlay = document.getElementById('winnerOverlay');
+    const text = document.getElementById('winnerText');
+    const sub = document.getElementById('winnerSub');
+    if(draw){
+      text.textContent = '引き分け';
+      sub.textContent = '盤面が埋まりました';
+    } else {
+      const dotColor = winner === 'white' ? 'var(--ivory-mid)' : 'var(--ebony-mid)';
+      text.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:' + dotColor + ';box-shadow:0 0 0 1px var(--silver-dim);"></span>' + (winner === 'white' ? '白' : '黒') + 'の勝ち！';
+      sub.textContent = '4つ並びました';
+    }
+    overlay.classList.add('show');
+  }
+
+  document.getElementById('newGameBtn').addEventListener('click', resetAll);
+  document.getElementById('againBtn').addEventListener('click', resetBoard);
+  document.getElementById('rulesBtn').addEventListener('click', () => {
+    document.getElementById('rules').classList.toggle('open');
+  });
+
+  resetAll();
+})();
+</script>
+</body>
+</html>

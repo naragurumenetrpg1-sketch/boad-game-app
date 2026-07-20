@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>三ノ将棋 — ミニ将棋 3×4</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap');
+
+  :root{
+    --frame-hi: #2a2a2a;
+    --frame-mid: #141414;
+    --frame-low: #030303;
+    --cell-a: #1c1c1c;
+    --cell-b: #131313;
+    --grid-line: #3a3a3a;
+    --piece-face: #f2efe6;
+    --piece-face-2: #d9d4c4;
+    --piece-face-dark: #262626;
+    --piece-face-dark-2: #050505;
+    --ink: #17130c;
+    --ink-light: #f0ece0;
+    --silver: #cfcfcf;
+    --silver-dim: #6f6f6f;
+    --sente: #f2efe6;
+    --gote: #1c1c1c;
+    --paper: #161616;
+    --paper-deep: #050505;
+    --hairline: rgba(255,255,255,0.14);
+    --shadow: rgba(0,0,0,0.7);
+  }
+
+  *{ box-sizing: border-box; }
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(ellipse at 50% -10%, #1c1c1c 0%, #0a0a0a 55%, #000000 100%);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    color: var(--silver);
+    display:flex;
+    justify-content:center;
+    padding: 18px 12px 40px;
+  }
+
+  .app{
+    width:100%;
+    max-width: 480px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+  }
+
+  header{
+    text-align:center;
+    margin-top:4px;
+  }
+  h1{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size: 1.7rem;
+    letter-spacing: 0.08em;
+    margin:0;
+    color:#fff;
+    text-shadow: 0 2px 10px rgba(255,255,255,0.12);
+  }
+  h1 .small{
+    display:block;
+    font-size:0.6rem;
+    letter-spacing:0.4em;
+    font-weight:500;
+    color:var(--silver-dim);
+    margin-top:6px;
+    text-transform: uppercase;
+  }
+
+  /* --- turn seal --- */
+  .turn-wrap{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-height: 46px;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    padding: 8px 22px;
+  }
+  .seal{
+    font-family:'Kaisei Decol', serif;
+    font-weight:500;
+    font-size: 0.9rem;
+    color: var(--ink);
+    background: var(--sente);
+    padding: 8px 18px;
+    border-radius: 3px;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.4), 0 6px 10px rgba(0,0,0,0.4);
+    transition: background .25s ease, color .25s ease;
+    letter-spacing: 0.15em;
+  }
+  .seal.gote{ background: var(--gote); color: var(--ink-light); box-shadow: 0 3px 0 rgba(0,0,0,0.4), 0 6px 10px rgba(0,0,0,0.4), inset 0 0 0 1px var(--silver-dim); }
+  .seal.pulse{ animation: stamp .35s ease; }
+  @keyframes stamp{
+    0%{ transform: scale(1.4); opacity:0; }
+    60%{ transform: scale(0.96); opacity:1; }
+    100%{ transform: scale(1); }
+  }
+  .status-text{
+    font-size:0.72rem;
+    color:var(--silver-dim);
+    letter-spacing:0.05em;
+  }
+
+  /* --- komadai (captured pieces trays) --- */
+  .komadai{
+    width:100%;
+    max-width: 340px;
+    min-height: 56px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    box-shadow: inset 0 0 12px rgba(0,0,0,0.4);
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding: 8px 10px;
+    flex-wrap: wrap;
+  }
+  .komadai .label{
+    font-family:'Kaisei Decol', serif;
+    font-size:0.66rem;
+    color:var(--silver-dim);
+    letter-spacing:0.1em;
+    min-width: 44px;
+  }
+  .hand-piece{
+    position:relative;
+    width:34px; height:38px;
+    cursor:pointer;
+    filter: drop-shadow(0 2px 3px rgba(0,0,0,0.5));
+    transition: transform .12s ease;
+  }
+  .hand-piece:hover{ transform: translateY(-3px); }
+  .hand-piece.selected{ transform: translateY(-5px) scale(1.05); }
+  .hand-piece .count{
+    position:absolute; bottom:-6px; right:-6px;
+    background: #fff; color:#111;
+    font-size: 0.62rem; font-weight:700;
+    border-radius: 50%;
+    width:16px; height:16px;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  }
+  .komadai.empty-hint{ color:var(--silver-dim); font-size:0.7rem; padding-left:14px; }
+
+  /* --- board --- */
+  .board-frame{
+    padding: 14px;
+    background:
+      linear-gradient(160deg, var(--frame-hi), var(--frame-mid) 45%, var(--frame-low));
+    border-radius: 4px;
+    box-shadow:
+      0 16px 32px rgba(0,0,0,0.65),
+      inset 0 1px 0 rgba(255,255,255,0.15),
+      inset 0 0 0 1px rgba(255,255,255,0.06);
+  }
+  .board{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    width: min(320px, 78vw);
+    height: calc(min(320px, 78vw) * 4 / 3);
+    border: 1px solid var(--grid-line);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.5);
+  }
+  .cell{
+    position:relative;
+    border: 1px solid var(--grid-line);
+    background: var(--cell-a);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .cell::before{
+    content:'';
+    position:absolute; inset:0;
+    background: linear-gradient(120deg, rgba(255,255,255,0.05), rgba(0,0,0,0.08));
+    pointer-events:none;
+  }
+  .cell.highlight{
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.7);
+  }
+  .cell.highlight::after{
+    content:'';
+    position:absolute;
+    width:20%; height:20%;
+    border-radius:50%;
+    background: rgba(255,255,255,0.35);
+  }
+  .cell.selected{
+    box-shadow: inset 0 0 0 2px var(--silver-dim);
+  }
+  .cell.king-fallen{
+    animation: shake .5s ease;
+  }
+  @keyframes shake{
+    0%,100%{ transform: translateX(0); }
+    25%{ transform: translateX(-3px); }
+    75%{ transform: translateX(3px); }
+  }
+
+  /* --- shogi koma piece (pentagon) --- */
+  .koma{
+    position:relative;
+    width: 78%; height: 82%;
+    clip-path: polygon(50% 0%, 100% 28%, 88% 100%, 12% 100%, 0% 28%);
+    background: linear-gradient(180deg, var(--piece-face), var(--piece-face-2));
+    box-shadow:
+      0 3px 4px rgba(0,0,0,0.5),
+      inset 0 1px 1px rgba(255,255,255,0.7),
+      inset 0 -2px 3px rgba(0,0,0,0.15);
+    display:flex; align-items:center; justify-content:center;
+    user-select:none;
+    transition: transform .15s ease;
+  }
+  .koma.gote-side{
+    transform: rotate(180deg);
+    background: linear-gradient(180deg, var(--piece-face-dark), var(--piece-face-dark-2));
+    box-shadow:
+      0 3px 4px rgba(0,0,0,0.6),
+      inset 0 1px 1px rgba(255,255,255,0.12),
+      inset 0 -2px 3px rgba(0,0,0,0.4),
+      0 0 0 1px var(--silver-dim);
+  }
+  .koma .kanji{
+    font-family:'Shippori Mincho', serif;
+    font-weight: 700;
+    color: var(--ink);
+    line-height:1;
+  }
+  .koma.gote-side .kanji{ color: var(--ink-light); }
+  .koma.promoted{ box-shadow: 0 3px 4px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.7), inset 0 -2px 3px rgba(0,0,0,0.15), 0 0 0 2px var(--silver); }
+  .koma.gote-side.promoted{ box-shadow: 0 3px 4px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.12), inset 0 -2px 3px rgba(0,0,0,0.4), 0 0 0 2px var(--silver); }
+  .koma.king .kanji{ font-weight:800; }
+  .cell .koma{ font-size: clamp(1.1rem, 6vw, 1.5rem); }
+
+  /* --- controls --- */
+  .controls{
+    display:flex;
+    gap:10px;
+    margin-top:2px;
+  }
+  button{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.76rem;
+    letter-spacing:0.1em;
+    color:#fff;
+    background: transparent;
+    border: 1px solid var(--silver-dim);
+    border-radius:2px;
+    padding: 10px 18px;
+    cursor:pointer;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  button:hover{ background: rgba(255,255,255,0.06); border-color:#fff; }
+  button:active{ transform: translateY(1px); }
+  button:focus-visible, .cell:focus-visible, .hand-piece:focus-visible{
+    outline: 1px solid #fff;
+    outline-offset: 2px;
+  }
+  button.ghost{
+    background: transparent;
+    color:var(--silver);
+    border-color:var(--silver-dim);
+  }
+
+  .rules{
+    width:100%;
+    max-width: 400px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 12px 16px;
+    font-size:0.76rem;
+    line-height:1.8;
+    color:#cfcfcf;
+    display:none;
+  }
+  .rules.open{ display:block; }
+  .rules h2{
+    font-family:'Kaisei Decol', serif;
+    font-weight:500;
+    font-size:0.9rem;
+    margin: 0 0 8px;
+    color:#fff;
+    letter-spacing:0.05em;
+  }
+  .rules ul{ margin:4px 0; padding-left:1.1em; }
+
+  .winner-overlay{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,0.82);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:20;
+    padding: 20px;
+  }
+  .winner-overlay.show{ display:flex; }
+  .winner-card{
+    background: linear-gradient(180deg, var(--paper), var(--paper-deep));
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 32px 34px;
+    text-align:center;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    max-width: 300px;
+  }
+  .winner-card .big{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:1.3rem;
+    color:#fff;
+    margin-bottom:10px;
+    letter-spacing:0.04em;
+  }
+  .winner-card p{ color:var(--silver-dim); font-size:0.8rem; margin: 0 0 20px; letter-spacing:0.04em; }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <h1>三ノ将棋<span class="small">MINI SHOGI · 3 × 4</span></h1>
+  </header>
+
+  <div class="turn-wrap">
+    <div id="seal" class="seal">先手 の番</div>
+    <div id="statusText" class="status-text"></div>
+  </div>
+
+  <div id="goteKomadai" class="komadai"></div>
+
+  <div class="board-frame">
+    <div id="board" class="board" role="grid" aria-label="将棋盤"></div>
+  </div>
+
+  <div id="senteKomadai" class="komadai"></div>
+
+  <div class="controls">
+    <button id="newGameBtn">はじめから</button>
+    <button id="rulesBtn" class="ghost">遊び方</button>
+  </div>
+
+  <div id="rules" class="rules">
+    <h2>遊び方</h2>
+    <ul>
+      <li><b>王</b>：全方向に1マス</li>
+      <li><b>金</b>：前後左右と斜め前に1マス（斜め後ろは進めない）</li>
+      <li><b>銀</b>：前と斜め4方向に1マス（左右・真後ろは進めない）</li>
+      <li><b>歩</b>：前に1マスのみ。敵陣（一番奥の列）に入ると自動で成る</li>
+      <li>成った歩は「と」、成った銀は「全」となり、金と同じ動き</li>
+      <li>相手の駒を取ると持ち駒になり、自分の番に空きマスへ打てる（1手消費）</li>
+      <li>歩は同じ列に自分の歩がある時は打てない、また敵陣の最終列にも打てない</li>
+      <li><b>相手の「王」を取ったら勝利</b>（詰みの判定はなし）</li>
+    </ul>
+  </div>
+
+</div>
+
+<div id="winnerOverlay" class="winner-overlay">
+  <div class="winner-card">
+    <div id="winnerText" class="big">先手の勝ち！</div>
+    <p>王を討ち取りました</p>
+    <button id="againBtn">もう一度</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const ROWS = 4, COLS = 3;
+  const KANJI = { king:'王', gold:'金', silver:'銀', pawn:'歩', tokin:'と', narigin:'全' };
+  const PROMOTED = { pawn:'tokin', silver:'narigin' };
+
+  let board, hands, turn, selected, selectedDrop, gameOver;
+
+  function initialBoard(){
+    const b = Array.from({length:ROWS}, () => Array(COLS).fill(null));
+    b[0][0] = {owner:'gote', type:'silver'};
+    b[0][1] = {owner:'gote', type:'king'};
+    b[0][2] = {owner:'gote', type:'gold'};
+    b[1][0] = {owner:'gote', type:'pawn'};
+    b[1][1] = {owner:'gote', type:'pawn'};
+    b[1][2] = {owner:'gote', type:'pawn'};
+    b[2][0] = {owner:'sente', type:'pawn'};
+    b[2][1] = {owner:'sente', type:'pawn'};
+    b[2][2] = {owner:'sente', type:'pawn'};
+    b[3][0] = {owner:'sente', type:'gold'};
+    b[3][1] = {owner:'sente', type:'king'};
+    b[3][2] = {owner:'sente', type:'silver'};
+    return b;
+  }
+
+  function resetGame(){
+    board = initialBoard();
+    hands = { sente: {}, gote: {} };
+    turn = 'sente';
+    selected = null;
+    selectedDrop = null;
+    gameOver = false;
+    document.getElementById('winnerOverlay').classList.remove('show');
+    render();
+  }
+
+  function moveOffsets(type, owner){
+    const fwd = owner === 'sente' ? -1 : 1;
+    if(type === 'king'){
+      const out = [];
+      for(let dr=-1; dr<=1; dr++) for(let dc=-1; dc<=1; dc++) if(dr||dc) out.push([dr,dc]);
+      return out;
+    }
+    if(type === 'gold' || type === 'tokin' || type === 'narigin'){
+      return [[fwd,-1],[fwd,0],[fwd,1],[0,-1],[0,1],[-fwd,0]];
+    }
+    if(type === 'silver'){
+      return [[fwd,-1],[fwd,0],[fwd,1],[-fwd,-1],[-fwd,1]];
+    }
+    if(type === 'pawn'){
+      return [[fwd,0]];
+    }
+    return [];
+  }
+
+  function inBounds(r,c){ return r>=0 && r<ROWS && c>=0 && c<COLS; }
+
+  function legalMovesFrom(r,c){
+    const piece = board[r][c];
+    if(!piece) return [];
+    const offs = moveOffsets(piece.type, piece.owner);
+    const out = [];
+    for(const [dr,dc] of offs){
+      const nr=r+dr, nc=c+dc;
+      if(!inBounds(nr,nc)) continue;
+      const target = board[nr][nc];
+      if(target && target.owner === piece.owner) continue;
+      out.push([nr,nc]);
+    }
+    return out;
+  }
+
+  function legalDropsFor(owner, type){
+    const out = [];
+    const lastRow = owner === 'sente' ? 0 : ROWS-1;
+    let hasOwnPawnInCol = null;
+    if(type === 'pawn'){
+      hasOwnPawnInCol = Array(COLS).fill(false);
+      for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+        const p = board[r][c];
+        if(p && p.owner===owner && p.type==='pawn') hasOwnPawnInCol[c] = true;
+      }
+    }
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        if(board[r][c]) continue;
+        if(type === 'pawn'){
+          if(r === lastRow) continue;
+          if(hasOwnPawnInCol[c]) continue;
+        }
+        out.push([r,c]);
+      }
+    }
+    return out;
+  }
+
+  function performMove(r,c,nr,nc){
+    const piece = board[r][c];
+    const captured = board[nr][nc];
+    let kingCaptured = false;
+    if(captured){
+      if(captured.type === 'king') kingCaptured = true;
+      else {
+        const baseType = captured.type === 'tokin' ? 'pawn' : (captured.type === 'narigin' ? 'silver' : captured.type);
+        hands[piece.owner][baseType] = (hands[piece.owner][baseType] || 0) + 1;
+      }
+    }
+    board[nr][nc] = piece;
+    board[r][c] = null;
+    const lastRow = piece.owner === 'sente' ? 0 : ROWS-1;
+    if(nr === lastRow && PROMOTED[piece.type]){
+      board[nr][nc] = { owner: piece.owner, type: PROMOTED[piece.type] };
+    }
+    return kingCaptured;
+  }
+
+  function performDrop(type, nr, nc){
+    board[nr][nc] = { owner: turn, type };
+    hands[turn][type] -= 1;
+    if(hands[turn][type] <= 0) delete hands[turn][type];
+  }
+
+  function endTurn(kingCaptured){
+    if(kingCaptured){
+      gameOver = true;
+      showWinner(turn);
+      render();
+      return;
+    }
+    turn = turn === 'sente' ? 'gote' : 'sente';
+    selected = null;
+    selectedDrop = null;
+    render(true);
+  }
+
+  function showWinner(winner){
+    const overlay = document.getElementById('winnerOverlay');
+    const text = document.getElementById('winnerText');
+    text.textContent = (winner === 'sente' ? '先手' : '後手') + 'の勝ち！';
+    overlay.classList.add('show');
+  }
+
+  function onCellClick(r,c){
+    if(gameOver) return;
+    const piece = board[r][c];
+
+    if(selectedDrop){
+      const legal = legalDropsFor(turn, selectedDrop);
+      if(legal.some(([lr,lc]) => lr===r && lc===c)){
+        performDrop(selectedDrop, r, c);
+        endTurn(false);
+      } else {
+        selectedDrop = null;
+        render();
+      }
+      return;
+    }
+
+    if(selected){
+      const [sr,sc] = selected;
+      const legal = legalMovesFrom(sr,sc);
+      if(legal.some(([lr,lc]) => lr===r && lc===c)){
+        const kingCaptured = performMove(sr,sc,r,c);
+        endTurn(kingCaptured);
+        return;
+      }
+      if(piece && piece.owner === turn){
+        selected = [r,c];
+        render();
+        return;
+      }
+      selected = null;
+      render();
+      return;
+    }
+
+    if(piece && piece.owner === turn){
+      selected = [r,c];
+      render();
+    }
+  }
+
+  function onHandClick(owner, type){
+    if(gameOver || owner !== turn) return;
+    selected = null;
+    selectedDrop = (selectedDrop === type) ? null : type;
+    render();
+  }
+
+  function komaEl(piece){
+    const div = document.createElement('div');
+    div.className = 'koma' + (piece.owner === 'gote' ? ' gote-side' : '') + (piece.type === 'king' ? ' king' : '') + (['tokin','narigin'].includes(piece.type) ? ' promoted' : '');
+    const span = document.createElement('span');
+    span.className = 'kanji';
+    span.textContent = KANJI[piece.type];
+    div.appendChild(span);
+    return div;
+  }
+
+  function renderKomadai(owner){
+    const el = document.getElementById(owner === 'sente' ? 'senteKomadai' : 'goteKomadai');
+    el.innerHTML = '';
+    const label = document.createElement('div');
+    label.className = 'label';
+    label.textContent = (owner === 'sente' ? '先手 持駒' : '後手 持駒');
+    el.appendChild(label);
+
+    const hand = hands[owner];
+    const types = Object.keys(hand);
+    if(types.length === 0){
+      const hint = document.createElement('span');
+      hint.className = 'empty-hint';
+      hint.textContent = 'なし';
+      el.appendChild(hint);
+      return;
+    }
+    types.forEach(type => {
+      const wrap = document.createElement('div');
+      wrap.className = 'hand-piece' + (selectedDrop === type && turn === owner ? ' selected' : '');
+      wrap.tabIndex = 0;
+      wrap.setAttribute('role','button');
+      wrap.setAttribute('aria-label', KANJI[type] + ' を打つ');
+      const piece = { owner, type };
+      wrap.appendChild(komaEl(piece));
+      const count = document.createElement('div');
+      count.className = 'count';
+      count.textContent = hand[type];
+      wrap.appendChild(count);
+      wrap.addEventListener('click', () => onHandClick(owner, type));
+      wrap.addEventListener('keydown', (e) => { if(e.key==='Enter' || e.key===' ') { e.preventDefault(); onHandClick(owner, type); } });
+      el.appendChild(wrap);
+    });
+  }
+
+  function render(pulse){
+    const boardEl = document.getElementById('board');
+    boardEl.innerHTML = '';
+
+    let highlightCells = [];
+    if(selected){
+      highlightCells = legalMovesFrom(selected[0], selected[1]);
+    } else if(selectedDrop){
+      highlightCells = legalDropsFor(turn, selectedDrop);
+    }
+
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.style.background = ((r+c)%2===0) ? 'var(--cell-a)' : 'var(--cell-b)';
+        cell.tabIndex = 0;
+        cell.setAttribute('role','gridcell');
+        if(selected && selected[0]===r && selected[1]===c) cell.classList.add('selected');
+        if(highlightCells.some(([hr,hc]) => hr===r && hc===c)) cell.classList.add('highlight');
+
+        const piece = board[r][c];
+        if(piece) cell.appendChild(komaEl(piece));
+
+        cell.addEventListener('click', () => onCellClick(r,c));
+        cell.addEventListener('keydown', (e) => { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); onCellClick(r,c); } });
+        boardEl.appendChild(cell);
+      }
+    }
+
+    renderKomadai('sente');
+    renderKomadai('gote');
+
+    const seal = document.getElementById('seal');
+    seal.textContent = (turn === 'sente' ? '先手' : '後手') + ' の番';
+    seal.className = 'seal' + (turn === 'gote' ? ' gote' : '');
+    if(pulse){
+      void seal.offsetWidth;
+      seal.classList.add('pulse');
+    }
+
+    const status = document.getElementById('statusText');
+    if(gameOver){
+      status.textContent = '対局終了';
+    } else if(selectedDrop){
+      status.textContent = KANJI[selectedDrop] + ' を打つマスを選んでください';
+    } else if(selected){
+      status.textContent = '移動先のマスを選んでください';
+    } else {
+      status.textContent = '駒か持駒を選んでください';
+    }
+  }
+
+  document.getElementById('newGameBtn').addEventListener('click', resetGame);
+  document.getElementById('againBtn').addEventListener('click', resetGame);
+  document.getElementById('rulesBtn').addEventListener('click', () => {
+    document.getElementById('rules').classList.toggle('open');
+  });
+
+  resetGame();
+})();
+</script>
+</body>
+</html>
