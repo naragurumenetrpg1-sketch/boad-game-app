@@ -2,18 +2,18 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>三ノ将棋 — ミニ将棋 3×4</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap');
 
   :root{
-    --frame-hi: #2a2a2a;
-    --frame-mid: #141414;
+    --frame-hi: #3a3a3a;
+    --frame-mid: #202020;
     --frame-low: #030303;
-    --cell-a: #1c1c1c;
-    --cell-b: #131313;
-    --grid-line: #3a3a3a;
+    --cell-a: #2c2c2c;
+    --cell-b: #232323;
+    --grid-line: #4d4d4d;
     --piece-face: #f2efe6;
     --piece-face-2: #d9d4c4;
     --piece-face-dark: #262626;
@@ -32,16 +32,123 @@
 
   *{ box-sizing: border-box; }
 
+  .home-btn{
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 100;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    color: #fff;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 3px;
+    padding: 7px 12px;
+    text-decoration:none;
+    backdrop-filter: blur(4px);
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .home-btn:hover{ background: rgba(255,255,255,0.24); color:#fff; border-color:#fff; }
+
+  .undo-btn{
+    position: fixed;
+    z-index: 100;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    color: #fff;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 3px;
+    padding: 7px 14px;
+    cursor:pointer;
+    backdrop-filter: blur(4px);
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .undo-btn:hover:not(:disabled){ background: rgba(255,255,255,0.24); color:#fff; border-color:#fff; }
+  .undo-btn:disabled{ opacity:0.62; cursor:default; }
+  .undo-btn-sente{ top: 14px; right: 14px; }
+  .undo-btn-gote{ bottom: 14px; left: 14px; transform: rotate(180deg); }
+  .undo-btn-gote:hover:not(:disabled){ transform: rotate(180deg); }
+
+  .confirm-overlay{
+    position:fixed; inset:0;
+    background: rgba(0,0,0,0.85);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index:200;
+    padding: 20px;
+  }
+  .confirm-overlay.show{ display:flex; }
+  .confirm-card{
+    background: linear-gradient(180deg, #161616, #050505);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 30px 30px;
+    text-align:center;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    max-width: 300px;
+    transition: transform .2s ease;
+  }
+  .confirm-card.rotated{ transform: rotate(180deg); }
+  .confirm-card .big{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:1.1rem;
+    color:#fff;
+    margin-bottom:10px;
+    letter-spacing: 0.04em;
+  }
+  .confirm-card p{ color:var(--silver-dim); font-size:0.8rem; margin: 0 0 20px; letter-spacing:0.04em; line-height:1.7; }
+  .confirm-row{ display:flex; gap:10px; justify-content:center; }
+
+  .mode-toggle-row{ display:flex; gap:8px; }
+  .mode-toggle-btn{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.68rem;
+    letter-spacing:0.06em;
+    color: var(--silver);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--silver-dim);
+    border-radius:3px;
+    padding: 6px 12px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .mode-toggle-btn.active{ background:#fff; color:#141414; border-color:#fff; }
+  .cpu-thinking{
+    font-size:0.7rem;
+    color: var(--silver-dim);
+    letter-spacing:0.05em;
+    text-align:center;
+  }
+
+  html{
+    height: 100%;
+    overflow: hidden;
+    touch-action: manipulation;
+  }
   body{
     margin:0;
-    min-height:100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
     background:
       radial-gradient(ellipse at 50% -10%, #1c1c1c 0%, #0a0a0a 55%, #000000 100%);
     font-family:'Zen Kaku Gothic New', sans-serif;
     color: var(--silver);
     display:flex;
     justify-content:center;
-    padding: 18px 12px 40px;
+    align-items:flex-start;
+    padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
   }
 
   .app{
@@ -50,17 +157,28 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:14px;
+    gap:8px;
   }
+  header{ order: -1; }
+  #turnWrap{ order: 0; }
+  #goteKomadai{ order: 1; }
+  #boardFrame{ order: 2; }
+  #senteKomadai{ order: 3; }
+  #modeToggleRow{ order: 4; }
+  #sideToggleRow{ order: 5; }
+  #controlsWrap{ order: 6; }
+  #rules{ order: 7; }
+  .app.gote-tray-bottom #goteKomadai{ order: 3; }
+  .app.gote-tray-bottom #senteKomadai{ order: 1; }
 
   header{
     text-align:center;
-    margin-top:4px;
+    margin-top:0;
   }
   h1{
     font-family:'Kaisei Decol', serif;
     font-weight:700;
-    font-size: 1.7rem;
+    font-size: 1.35rem;
     letter-spacing: 0.08em;
     margin:0;
     color:#fff;
@@ -68,11 +186,11 @@
   }
   h1 .small{
     display:block;
-    font-size:0.6rem;
+    font-size:0.58rem;
     letter-spacing:0.4em;
     font-weight:500;
     color:var(--silver-dim);
-    margin-top:6px;
+    margin-top:3px;
     text-transform: uppercase;
   }
 
@@ -81,10 +199,10 @@
     display:flex;
     align-items:center;
     gap:10px;
-    min-height: 46px;
+    min-height: 34px;
     border-top: 1px solid var(--hairline);
     border-bottom: 1px solid var(--hairline);
-    padding: 8px 22px;
+    padding: 5px 18px;
   }
   .seal{
     font-family:'Kaisei Decol', serif;
@@ -115,15 +233,15 @@
   .komadai{
     width:100%;
     max-width: 340px;
-    min-height: 56px;
+    min-height: 44px;
     background: rgba(255,255,255,0.03);
     border: 1px solid var(--hairline);
     border-radius: 4px;
     box-shadow: inset 0 0 12px rgba(0,0,0,0.4);
     display:flex;
     align-items:center;
-    gap:8px;
-    padding: 8px 10px;
+    gap:6px;
+    padding: 5px 10px;
     flex-wrap: wrap;
   }
   .komadai .label{
@@ -153,9 +271,13 @@
   }
   .komadai.empty-hint{ color:var(--silver-dim); font-size:0.7rem; padding-left:14px; }
 
+  .komadai-flipped{ transform: rotate(180deg); }
+  .board-frame.flipped{ transform: rotate(180deg); }
+
   /* --- board --- */
   .board-frame{
-    padding: 14px;
+    position:relative;
+    padding: 10px;
     background:
       linear-gradient(160deg, var(--frame-hi), var(--frame-mid) 45%, var(--frame-low));
     border-radius: 4px;
@@ -164,12 +286,14 @@
       inset 0 1px 0 rgba(255,255,255,0.15),
       inset 0 0 0 1px rgba(255,255,255,0.06);
   }
+
+  .hidden{ display:none !important; }
   .board{
     display:grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(4, 1fr);
-    width: min(320px, 78vw);
-    height: calc(min(320px, 78vw) * 4 / 3);
+    width: min(260px, 62vw);
+    height: calc(min(260px, 62vw) * 4 / 3);
     border: 1px solid var(--grid-line);
     box-shadow: inset 0 0 0 1px rgba(0,0,0,0.5);
   }
@@ -221,7 +345,18 @@
     display:flex; align-items:center; justify-content:center;
     user-select:none;
     transition: transform .15s ease;
+    transform-style: preserve-3d;
   }
+  .koma-depth{
+    position:absolute; inset:0;
+    clip-path: polygon(50% 0%, 100% 28%, 88% 100%, 12% 100%, 0% 28%);
+    pointer-events:none;
+    z-index: 1;
+  }
+  .koma-depth.d1{ background:#bdb49a; transform: translateZ(-1.5px); }
+  .koma-depth.d2{ background:#948a70; transform: translateZ(-3px); }
+  .koma.gote-side .koma-depth.d1{ background:#141414; }
+  .koma.gote-side .koma-depth.d2{ background:#000000; }
   .koma.gote-side{
     transform: rotate(180deg);
     background: linear-gradient(180deg, var(--piece-face-dark), var(--piece-face-dark-2));
@@ -231,7 +366,10 @@
       inset 0 -2px 3px rgba(0,0,0,0.4),
       0 0 0 1px var(--silver-dim);
   }
+  .koma.gote-side.no-flip{ transform: none; }
   .koma .kanji{
+    position:relative;
+    z-index: 2;
     font-family:'Shippori Mincho', serif;
     font-weight: 700;
     color: var(--ink);
@@ -247,18 +385,18 @@
   .controls{
     display:flex;
     gap:10px;
-    margin-top:2px;
+    margin-top:0;
   }
   button{
     font-family:'Zen Kaku Gothic New', sans-serif;
     font-weight:700;
-    font-size:0.76rem;
+    font-size:0.72rem;
     letter-spacing:0.1em;
     color:#fff;
     background: transparent;
     border: 1px solid var(--silver-dim);
     border-radius:2px;
-    padding: 10px 18px;
+    padding: 8px 16px;
     cursor:pointer;
     transition: background .15s ease, border-color .15s ease;
   }
@@ -327,26 +465,40 @@
 </style>
 </head>
 <body>
+<a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
+<button class="undo-btn undo-btn-sente" id="undoBtn" disabled>待った</button>
+<button class="undo-btn undo-btn-gote" id="undoBtnGote" disabled>待った</button>
 <div class="app">
 
   <header>
     <h1>三ノ将棋<span class="small">MINI SHOGI · 3 × 4</span></h1>
   </header>
 
-  <div class="turn-wrap">
+  <div class="turn-wrap" id="turnWrap">
     <div id="seal" class="seal">先手 の番</div>
     <div id="statusText" class="status-text"></div>
   </div>
 
   <div id="goteKomadai" class="komadai"></div>
 
-  <div class="board-frame">
+  <div class="board-frame" id="boardFrame">
     <div id="board" class="board" role="grid" aria-label="将棋盤"></div>
   </div>
 
   <div id="senteKomadai" class="komadai"></div>
 
-  <div class="controls">
+  <div class="mode-toggle-row" id="modeToggleRow">
+    <button class="mode-toggle-btn active" id="modeTwoPlayerBtn">2人対戦</button>
+    <button class="mode-toggle-btn" id="modeCPUBtn">CPU対戦</button>
+    <button class="mode-toggle-btn" id="modeCPUMasterBtn">達人CPU</button>
+  </div>
+
+  <div class="mode-toggle-row hidden" id="sideToggleRow">
+    <button class="mode-toggle-btn active" id="sideSenteBtn">先手で対戦</button>
+    <button class="mode-toggle-btn" id="sideGoteBtn">後手で対戦</button>
+  </div>
+
+  <div class="controls" id="controlsWrap">
     <button id="newGameBtn">はじめから</button>
     <button id="rulesBtn" class="ghost">遊び方</button>
   </div>
@@ -375,6 +527,17 @@
   </div>
 </div>
 
+<div id="undoConfirmOverlay" class="confirm-overlay">
+  <div class="confirm-card" id="undoConfirmCard">
+    <div class="big">待った</div>
+    <p id="undoConfirmText">直前の一手を取り消します。相手の許可が必要です。よろしいですか？</p>
+    <div class="confirm-row">
+      <button id="undoAllowBtn">許可する</button>
+      <button id="undoDenyBtn">却下する</button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
   const ROWS = 4, COLS = 3;
@@ -382,6 +545,15 @@
   const PROMOTED = { pawn:'tokin', silver:'narigin' };
 
   let board, hands, turn, selected, selectedDrop, gameOver;
+  let moveHistory = [];
+  let rejectionCount = 0;
+  let undoBlocked = false;
+  let pendingUndoRequestedBy = null;
+  let vsCPU = false;
+  let cpuDifficulty = 'normal';
+  let humanSide = 'sente';
+  let cpuThinking = false;
+  let cpuMovesMade = 0;
 
   function initialBoard(){
     const b = Array.from({length:ROWS}, () => Array(COLS).fill(null));
@@ -400,6 +572,11 @@
     return b;
   }
 
+  function cpuSide(){
+    if(!vsCPU) return null;
+    return humanSide === 'sente' ? 'gote' : 'sente';
+  }
+
   function resetGame(){
     board = initialBoard();
     hands = { sente: {}, gote: {} };
@@ -407,7 +584,59 @@
     selected = null;
     selectedDrop = null;
     gameOver = false;
+    moveHistory = [];
+    rejectionCount = 0;
+    undoBlocked = false;
+    cpuMovesMade = 0;
     document.getElementById('winnerOverlay').classList.remove('show');
+
+    document.getElementById('boardFrame').classList.toggle('flipped', vsCPU && humanSide === 'gote');
+    document.querySelector('.app').classList.toggle('gote-tray-bottom', vsCPU && humanSide === 'gote');
+    document.getElementById('undoBtn').classList.toggle('hidden', cpuSide() === 'sente');
+    document.getElementById('undoBtnGote').classList.toggle('hidden', cpuSide() === 'gote');
+
+    updateUndoButton();
+    render();
+
+    if(vsCPU && cpuSide() === 'sente' && !gameOver){
+      cpuThinking = true;
+      document.getElementById('statusText').textContent = (cpuDifficulty === 'master' ? '達人CPU' : 'CPU') + '（先手）が考え中…';
+      setTimeout(cpuTakeTurn, 1500);
+    }
+  }
+
+  function pushHistorySnapshot(){
+    moveHistory.push({
+      board: JSON.parse(JSON.stringify(board)),
+      hands: JSON.parse(JSON.stringify(hands)),
+      turn: turn,
+    });
+    rejectionCount = 0;
+    undoBlocked = false;
+    updateUndoButton();
+  }
+
+  function updateUndoButton(){
+    const disabled = moveHistory.length === 0 || undoBlocked;
+    const btn = document.getElementById('undoBtn');
+    const btnGote = document.getElementById('undoBtnGote');
+    if(btn) btn.disabled = disabled;
+    if(btnGote) btnGote.disabled = disabled;
+  }
+
+  function undoLastMove(){
+    if(moveHistory.length === 0) return;
+    const snap = moveHistory.pop();
+    board = snap.board;
+    hands = snap.hands;
+    turn = snap.turn;
+    selected = null;
+    selectedDrop = null;
+    gameOver = false;
+    rejectionCount = 0;
+    undoBlocked = false;
+    document.getElementById('winnerOverlay').classList.remove('show');
+    updateUndoButton();
     render();
   }
 
@@ -497,6 +726,188 @@
     if(hands[turn][type] <= 0) delete hands[turn][type];
   }
 
+  // ---------- CPU opponent (minimax with alpha-beta pruning) ----------
+  const PIECE_VALUE = { pawn:1, silver:5, gold:6, tokin:6, narigin:6, king:0 };
+
+  function cloneBoardState(b){ return b.map(row => row.map(c => c ? { owner:c.owner, type:c.type } : null)); }
+  function cloneHandsState(h){ return { sente: {...h.sente}, gote: {...h.gote} }; }
+
+  function simLegalMovesFrom(simBoard, r, c){
+    const piece = simBoard[r][c];
+    if(!piece) return [];
+    const offs = moveOffsets(piece.type, piece.owner);
+    const out = [];
+    for(const [dr,dc] of offs){
+      const nr=r+dr, nc=c+dc;
+      if(!inBounds(nr,nc)) continue;
+      const target = simBoard[nr][nc];
+      if(target && target.owner === piece.owner) continue;
+      out.push([nr,nc]);
+    }
+    return out;
+  }
+
+  function simLegalDrops(simBoard, simHands, owner, type){
+    const out = [];
+    const lastRow = owner === 'sente' ? 0 : ROWS-1;
+    let hasOwnPawnInCol = null;
+    if(type === 'pawn'){
+      hasOwnPawnInCol = Array(COLS).fill(false);
+      for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+        const p = simBoard[r][c];
+        if(p && p.owner===owner && p.type==='pawn') hasOwnPawnInCol[c] = true;
+      }
+    }
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        if(simBoard[r][c]) continue;
+        if(type === 'pawn'){
+          if(r === lastRow) continue;
+          if(hasOwnPawnInCol[c]) continue;
+        }
+        out.push([r,c]);
+      }
+    }
+    return out;
+  }
+
+  function generateAllMoves(simBoard, simHands, player){
+    const moves = [];
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        const p = simBoard[r][c];
+        if(p && p.owner === player){
+          simLegalMovesFrom(simBoard, r, c).forEach(([nr,nc]) => {
+            moves.push({ kind:'move', r, c, nr, nc });
+          });
+        }
+      }
+    }
+    Object.keys(simHands[player] || {}).forEach(type => {
+      if((simHands[player][type] || 0) <= 0) return;
+      simLegalDrops(simBoard, simHands, player, type).forEach(([nr,nc]) => {
+        moves.push({ kind:'drop', type, nr, nc });
+      });
+    });
+    return moves;
+  }
+
+  function applySimMove(simBoard, simHands, move, player){
+    if(move.kind === 'move'){
+      const piece = simBoard[move.r][move.c];
+      const captured = simBoard[move.nr][move.nc];
+      let kingCaptured = false;
+      if(captured){
+        if(captured.type === 'king') kingCaptured = true;
+        else {
+          const baseType = captured.type === 'tokin' ? 'pawn' : (captured.type === 'narigin' ? 'silver' : captured.type);
+          simHands[player][baseType] = (simHands[player][baseType] || 0) + 1;
+        }
+      }
+      simBoard[move.nr][move.nc] = piece;
+      simBoard[move.r][move.c] = null;
+      const lastRow = player === 'sente' ? 0 : ROWS-1;
+      if(move.nr === lastRow && PROMOTED[piece.type]){
+        simBoard[move.nr][move.nc] = { owner: player, type: PROMOTED[piece.type] };
+      }
+      return kingCaptured;
+    } else {
+      simBoard[move.nr][move.nc] = { owner: player, type: move.type };
+      simHands[player][move.type] -= 1;
+      if(simHands[player][move.type] <= 0) delete simHands[player][move.type];
+      return false;
+    }
+  }
+
+  function evaluatePosition(simBoard, simHands){
+    let score = 0;
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        const p = simBoard[r][c];
+        if(!p) continue;
+        const v = PIECE_VALUE[p.type] || 0;
+        score += (p.owner === 'gote' ? 1 : -1) * v;
+      }
+    }
+    Object.keys(simHands.gote || {}).forEach(t => { score += (PIECE_VALUE[t] || 0) * simHands.gote[t]; });
+    Object.keys(simHands.sente || {}).forEach(t => { score -= (PIECE_VALUE[t] || 0) * simHands.sente[t]; });
+    return score;
+  }
+
+  function minimaxSearch(simBoard, simHands, player, depth, alpha, beta){
+    const moves = generateAllMoves(simBoard, simHands, player);
+    if(depth === 0 || moves.length === 0) return evaluatePosition(simBoard, simHands);
+
+    if(player === 'gote'){
+      let best = -Infinity;
+      for(const move of moves){
+        const b2 = cloneBoardState(simBoard), h2 = cloneHandsState(simHands);
+        const kingCaptured = applySimMove(b2, h2, move, player);
+        const score = kingCaptured ? (1000 + depth) : minimaxSearch(b2, h2, 'sente', depth - 1, alpha, beta);
+        if(score > best) best = score;
+        alpha = Math.max(alpha, best);
+        if(alpha >= beta) break;
+      }
+      return best;
+    } else {
+      let best = Infinity;
+      for(const move of moves){
+        const b2 = cloneBoardState(simBoard), h2 = cloneHandsState(simHands);
+        const kingCaptured = applySimMove(b2, h2, move, player);
+        const score = kingCaptured ? (-1000 - depth) : minimaxSearch(b2, h2, 'gote', depth - 1, alpha, beta);
+        if(score < best) best = score;
+        beta = Math.min(beta, best);
+        if(alpha >= beta) break;
+      }
+      return best;
+    }
+  }
+
+  function cpuChooseMove(){
+    const side = cpuSide();
+    const opponent = side === 'sente' ? 'gote' : 'sente';
+    const CPU_DEPTH = cpuDifficulty === 'master' ? 5 : 3;
+    const moves = generateAllMoves(board, hands, side);
+    if(moves.length === 0) return null;
+    let bestMove = null;
+    let bestScore = side === 'gote' ? -Infinity : Infinity;
+    for(const move of moves){
+      const b2 = cloneBoardState(board), h2 = cloneHandsState(hands);
+      const kingCaptured = applySimMove(b2, h2, move, side);
+      let score;
+      if(kingCaptured){
+        score = side === 'gote' ? 10000 : -10000;
+      } else {
+        score = minimaxSearch(b2, h2, opponent, CPU_DEPTH, -Infinity, Infinity);
+      }
+      const better = side === 'gote' ? (score > bestScore) : (score < bestScore);
+      if(better){ bestScore = score; bestMove = move; }
+    }
+    return bestMove;
+  }
+
+  function cpuTakeTurn(){
+    cpuThinking = false;
+    if(gameOver || !vsCPU || turn !== cpuSide()) return;
+    const move = cpuChooseMove();
+    if(!move){
+      // no legal move available for CPU: pass back to the human rather than crash
+      turn = turn === 'sente' ? 'gote' : 'sente';
+      render(true);
+      return;
+    }
+    pushHistorySnapshot();
+    let kingCaptured;
+    if(move.kind === 'move'){
+      kingCaptured = performMove(move.r, move.c, move.nr, move.nc);
+    } else {
+      performDrop(move.type, move.nr, move.nc);
+      kingCaptured = false;
+    }
+    cpuMovesMade++;
+    endTurn(kingCaptured);
+  }
+
   function endTurn(kingCaptured){
     if(kingCaptured){
       gameOver = true;
@@ -508,6 +919,12 @@
     selected = null;
     selectedDrop = null;
     render(true);
+    if(vsCPU && turn === cpuSide() && !gameOver){
+      cpuThinking = true;
+      const sideLabel = cpuSide() === 'sente' ? '先手' : '後手';
+      document.getElementById('statusText').textContent = (cpuDifficulty === 'master' ? '達人CPU' : 'CPU') + '（' + sideLabel + '）が考え中…';
+      setTimeout(cpuTakeTurn, cpuMovesMade === 0 ? 1500 : 550);
+    }
   }
 
   function showWinner(winner){
@@ -518,12 +935,13 @@
   }
 
   function onCellClick(r,c){
-    if(gameOver) return;
+    if(gameOver || (vsCPU && turn === cpuSide())) return;
     const piece = board[r][c];
 
     if(selectedDrop){
       const legal = legalDropsFor(turn, selectedDrop);
       if(legal.some(([lr,lc]) => lr===r && lc===c)){
+        pushHistorySnapshot();
         performDrop(selectedDrop, r, c);
         endTurn(false);
       } else {
@@ -537,6 +955,7 @@
       const [sr,sc] = selected;
       const legal = legalMovesFrom(sr,sc);
       if(legal.some(([lr,lc]) => lr===r && lc===c)){
+        pushHistorySnapshot();
         const kingCaptured = performMove(sr,sc,r,c);
         endTurn(kingCaptured);
         return;
@@ -558,25 +977,39 @@
   }
 
   function onHandClick(owner, type){
-    if(gameOver || owner !== turn) return;
+    if(gameOver || owner !== turn || (vsCPU && turn === cpuSide())) return;
     selected = null;
     selectedDrop = (selectedDrop === type) ? null : type;
     render();
   }
 
-  function komaEl(piece){
+  function komaEl(piece, opts){
+    opts = opts || {};
     const div = document.createElement('div');
-    div.className = 'koma' + (piece.owner === 'gote' ? ' gote-side' : '') + (piece.type === 'king' ? ' king' : '') + (['tokin','narigin'].includes(piece.type) ? ' promoted' : '');
+    div.className = 'koma' + (piece.owner === 'gote' ? ' gote-side' : '') + (opts.noFlip ? ' no-flip' : '') + (piece.type === 'king' ? ' king' : '') + (['tokin','narigin'].includes(piece.type) ? ' promoted' : '');
+    const depth2 = document.createElement('div');
+    depth2.className = 'koma-depth d2';
+    const depth1 = document.createElement('div');
+    depth1.className = 'koma-depth d1';
     const span = document.createElement('span');
     span.className = 'kanji';
-    span.textContent = KANJI[piece.type];
+    span.textContent = (piece.type === 'king' && piece.owner === 'gote') ? '玉' : KANJI[piece.type];
+    div.appendChild(depth2);
+    div.appendChild(depth1);
     div.appendChild(span);
     return div;
+  }
+
+  function isFlippedSide(owner){
+    if(vsCPU && humanSide === 'gote') return owner === 'sente';
+    return owner === 'gote';
   }
 
   function renderKomadai(owner){
     const el = document.getElementById(owner === 'sente' ? 'senteKomadai' : 'goteKomadai');
     el.innerHTML = '';
+    const flipped = isFlippedSide(owner);
+    el.classList.toggle('komadai-flipped', flipped);
     const label = document.createElement('div');
     label.className = 'label';
     label.textContent = (owner === 'sente' ? '先手 持駒' : '後手 持駒');
@@ -598,7 +1031,7 @@
       wrap.setAttribute('role','button');
       wrap.setAttribute('aria-label', KANJI[type] + ' を打つ');
       const piece = { owner, type };
-      wrap.appendChild(komaEl(piece));
+      wrap.appendChild(komaEl(piece, { noFlip: !flipped }));
       const count = document.createElement('div');
       count.className = 'count';
       count.textContent = hand[type];
@@ -662,10 +1095,79 @@
     }
   }
 
+  function setMode(newVsCPU, newDifficulty){
+    if(vsCPU === newVsCPU && cpuDifficulty === newDifficulty) return;
+    vsCPU = newVsCPU;
+    cpuDifficulty = newDifficulty;
+    document.getElementById('modeTwoPlayerBtn').classList.toggle('active', !vsCPU);
+    document.getElementById('modeCPUBtn').classList.toggle('active', vsCPU && cpuDifficulty === 'normal');
+    document.getElementById('modeCPUMasterBtn').classList.toggle('active', vsCPU && cpuDifficulty === 'master');
+    document.getElementById('sideToggleRow').classList.toggle('hidden', !vsCPU);
+    resetGame();
+  }
+
+  document.getElementById('modeTwoPlayerBtn').addEventListener('click', () => setMode(false, 'normal'));
+  document.getElementById('modeCPUBtn').addEventListener('click', () => setMode(true, 'normal'));
+  document.getElementById('modeCPUMasterBtn').addEventListener('click', () => setMode(true, 'master'));
+
+  document.getElementById('sideSenteBtn').addEventListener('click', () => {
+    if(humanSide === 'sente') return;
+    humanSide = 'sente';
+    document.getElementById('sideSenteBtn').classList.add('active');
+    document.getElementById('sideGoteBtn').classList.remove('active');
+    resetGame();
+  });
+  document.getElementById('sideGoteBtn').addEventListener('click', () => {
+    if(humanSide === 'gote') return;
+    humanSide = 'gote';
+    document.getElementById('sideGoteBtn').classList.add('active');
+    document.getElementById('sideSenteBtn').classList.remove('active');
+    resetGame();
+  });
+
   document.getElementById('newGameBtn').addEventListener('click', resetGame);
   document.getElementById('againBtn').addEventListener('click', resetGame);
   document.getElementById('rulesBtn').addEventListener('click', () => {
     document.getElementById('rules').classList.toggle('open');
+  });
+
+  function openUndoConfirm(requestedBy){
+    if(moveHistory.length === 0 || undoBlocked) return;
+    if(vsCPU){
+      undoForCPUMode();
+      return;
+    }
+    pendingUndoRequestedBy = requestedBy;
+    const responder = requestedBy === 'sente' ? '後手' : '先手';
+    document.getElementById('undoConfirmText').textContent =
+      '直前の一手を取り消します。' + responder + 'の許可が必要です。よろしいですか？';
+    // Rotate the card so whichever side must respond can read it right-side up.
+    document.getElementById('undoConfirmCard').classList.toggle('rotated', requestedBy === 'sente');
+    document.getElementById('undoConfirmOverlay').classList.add('show');
+  }
+
+  function undoForCPUMode(){
+    undoLastMove();
+    // Undo the CPU's move too, so the human always lands back on their own turn.
+    if(moveHistory.length > 0 && turn === cpuSide()){
+      undoLastMove();
+    }
+  }
+
+  document.getElementById('undoBtn').addEventListener('click', () => openUndoConfirm('sente'));
+  document.getElementById('undoBtnGote').addEventListener('click', () => openUndoConfirm('gote'));
+
+  document.getElementById('undoAllowBtn').addEventListener('click', () => {
+    document.getElementById('undoConfirmOverlay').classList.remove('show');
+    undoLastMove();
+  });
+  document.getElementById('undoDenyBtn').addEventListener('click', () => {
+    document.getElementById('undoConfirmOverlay').classList.remove('show');
+    rejectionCount++;
+    if(rejectionCount >= 2){
+      undoBlocked = true;
+    }
+    updateUndoButton();
   });
 
   resetGame();
