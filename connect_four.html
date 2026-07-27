@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>コネクトフォー — 7×6 重力四目</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap');
@@ -30,16 +30,51 @@
 
   *{ box-sizing:border-box; }
 
+  .hidden{ display:none !important; }
+
+  html{
+    height: 100%;
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+
+  .home-btn{
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 100;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    color: #fff;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 3px;
+    padding: 7px 12px;
+    text-decoration:none;
+    backdrop-filter: blur(4px);
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .home-btn:hover{ background: rgba(255,255,255,0.24); color:#fff; border-color:#fff; }
+
   body{
     margin:0;
-    min-height:100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
     background:
       radial-gradient(ellipse at 50% -10%, #1c1c1c 0%, #0a0a0a 55%, #000000 100%);
     font-family:'Zen Kaku Gothic New', sans-serif;
     color: var(--paper);
     display:flex;
     justify-content:center;
-    padding: 18px 12px 40px;
+    align-items:flex-start;
+    padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
   }
 
   .app{
@@ -48,14 +83,14 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:16px;
+    gap:10px;
   }
 
-  header{ text-align:center; margin-top:2px; }
+  header{ text-align:center; margin-top:0; }
   h1{
     font-family:'Kaisei Decol', serif;
     font-weight:700;
-    font-size: clamp(1.5rem, 6vw, 2rem);
+    font-size: clamp(1.25rem, 5.5vw, 1.7rem);
     letter-spacing: 0.06em;
     margin:0;
     color:#fff;
@@ -63,11 +98,11 @@
   }
   h1 .small{
     display:block;
-    font-size:0.6rem;
-    letter-spacing:0.42em;
+    font-size:0.56rem;
+    letter-spacing:0.4em;
     font-weight:500;
     color:var(--silver-dim);
-    margin-top:8px;
+    margin-top:4px;
     text-transform: uppercase;
   }
 
@@ -76,10 +111,10 @@
     display:flex;
     align-items:center;
     gap:12px;
-    min-height:44px;
+    min-height:36px;
     border-top: 1px solid var(--hairline);
     border-bottom: 1px solid var(--hairline);
-    padding: 10px 22px;
+    padding: 6px 20px;
   }
   .turn-chip{
     width:32px; height:32px;
@@ -122,7 +157,7 @@
   /* --- board frame --- */
   .board-frame{
     position:relative;
-    padding: 16px 16px 24px;
+    padding: 12px 12px 18px;
     background: linear-gradient(160deg, var(--frame-hi), var(--frame-mid) 45%, var(--frame-low));
     border-radius: 4px;
     box-shadow:
@@ -135,18 +170,18 @@
     display:grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 4px;
-    width: min(420px, 82vw);
-    margin-bottom: 8px;
+    width: min(340px, 78vw);
+    margin-bottom: 6px;
   }
   .col-btn{
-    height: 24px;
+    height: 20px;
     border: 1px solid transparent;
     border-radius: 2px;
     background: transparent;
     color: var(--silver-dim);
     cursor:pointer;
     display:flex; align-items:center; justify-content:center;
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     transition: color .15s ease, border-color .15s ease;
   }
   .col-btn:hover:not(:disabled){ color: #fff; border-color: var(--hairline); }
@@ -158,8 +193,8 @@
     display:grid;
     grid-template-columns: repeat(7, 1fr);
     grid-template-rows: repeat(6, 1fr);
-    width: min(420px, 82vw);
-    height: calc(min(420px, 82vw) * 6 / 7);
+    width: min(340px, 78vw);
+    height: calc(min(340px, 78vw) * 6 / 7);
     background: var(--void);
     border-radius: 2px;
     box-shadow: inset 0 4px 14px rgba(0,0,0,0.85), inset 0 0 0 1px var(--void-rim);
@@ -207,17 +242,33 @@
     50%{ box-shadow: 0 0 16px 6px rgba(255,255,255,0.65); }
   }
 
-  .controls{ display:flex; gap:12px; margin-top:2px; }
+  .mode-toggle-row{ display:flex; gap:8px; }
+  .mode-toggle-btn{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.68rem;
+    letter-spacing:0.06em;
+    color: var(--silver);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--silver-dim);
+    border-radius:3px;
+    padding: 6px 12px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .mode-toggle-btn.active{ background:#fff; color:#141414; border-color:#fff; }
+
+  .controls{ display:flex; gap:12px; margin-top:0; }
   button.main-btn{
     font-family:'Zen Kaku Gothic New', sans-serif;
     font-weight:700;
-    font-size:0.76rem;
+    font-size:0.72rem;
     letter-spacing:0.1em;
     color:#fff;
     background: transparent;
     border: 1px solid var(--silver-dim);
     border-radius:2px;
-    padding: 10px 20px;
+    padding: 8px 16px;
     cursor:pointer;
     transition: background .15s ease, border-color .15s ease;
   }
@@ -279,6 +330,7 @@
 </style>
 </head>
 <body>
+<a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
 <div class="app">
 
   <header>
@@ -304,6 +356,17 @@
       <div id="board" class="board"></div>
       <div id="chipLayer" class="chip-layer"></div>
     </div>
+  </div>
+
+  <div class="mode-toggle-row" id="modeToggleRow">
+    <button class="mode-toggle-btn active" id="modeTwoPlayerBtn">2人対戦</button>
+    <button class="mode-toggle-btn" id="modeCPUBtn">CPU対戦</button>
+    <button class="mode-toggle-btn" id="modeCPUMasterBtn">達人CPU</button>
+  </div>
+
+  <div class="mode-toggle-row hidden" id="sideToggleRow">
+    <button class="mode-toggle-btn active" id="sideWhiteBtn">先行で対戦</button>
+    <button class="mode-toggle-btn" id="sideBlackBtn">後攻で対戦</button>
   </div>
 
   <div class="controls">
@@ -336,17 +399,171 @@
 (function(){
   const COLS = 7, ROWS = 6;
   let grid, turn, gameOver, colHeights, score;
+  let vsCPU = false;
+  let cpuDifficulty = 'normal';
+  let humanSide = 'white';
+  let cpuThinking = false;
+  let cpuMovesMade = 0;
+
+  function cpuSide(){
+    if(!vsCPU) return null;
+    return humanSide === 'white' ? 'black' : 'white';
+  }
+
+  // --- CPU AI: minimax with alpha-beta pruning over a standard Connect Four heuristic ---
+  function cloneGrid(g){ return g.map(row => row.slice()); }
+
+  function getValidCols(heights){
+    const cols = [];
+    for(let c=0;c<COLS;c++){ if(heights[c] < ROWS) cols.push(c); }
+    return cols;
+  }
+
+  function simulateDrop(g, heights, col, player){
+    const r = ROWS - 1 - heights[col];
+    g[r][col] = player;
+    heights[col]++;
+    return r;
+  }
+
+  function evaluateWindow(cells, player){
+    const opp = player === 'white' ? 'black' : 'white';
+    const countPlayer = cells.filter(v => v === player).length;
+    const countOpp = cells.filter(v => v === opp).length;
+    const countEmpty = cells.filter(v => v === null).length;
+    let score = 0;
+    if(countPlayer === 4) score += 100;
+    else if(countPlayer === 3 && countEmpty === 1) score += 5;
+    else if(countPlayer === 2 && countEmpty === 2) score += 2;
+    if(countOpp === 3 && countEmpty === 1) score -= 4;
+    return score;
+  }
+
+  function evaluatePosition(g, player){
+    let score = 0;
+    const centerCol = Math.floor(COLS / 2);
+    for(let r=0;r<ROWS;r++){ if(g[r][centerCol] === player) score += 3; }
+
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<=COLS-4;c++){
+        score += evaluateWindow([g[r][c],g[r][c+1],g[r][c+2],g[r][c+3]], player);
+      }
+    }
+    for(let c=0;c<COLS;c++){
+      for(let r=0;r<=ROWS-4;r++){
+        score += evaluateWindow([g[r][c],g[r+1][c],g[r+2][c],g[r+3][c]], player);
+      }
+    }
+    for(let r=0;r<=ROWS-4;r++){
+      for(let c=0;c<=COLS-4;c++){
+        score += evaluateWindow([g[r][c],g[r+1][c+1],g[r+2][c+2],g[r+3][c+3]], player);
+        score += evaluateWindow([g[r+3][c],g[r+2][c+1],g[r+1][c+2],g[r][c+3]], player);
+      }
+    }
+    return score;
+  }
+
+  function checkWinGrid(g, r, c, player){
+    const dirs = [ [[0,1],[0,-1]], [[1,0],[-1,0]], [[1,1],[-1,-1]], [[1,-1],[-1,1]] ];
+    for(const pair of dirs){
+      let count = 1;
+      for(const [dr,dc] of pair){
+        let nr=r+dr, nc=c+dc;
+        while(nr>=0 && nr<ROWS && nc>=0 && nc<COLS && g[nr][nc] === player){
+          count++; nr+=dr; nc+=dc;
+        }
+      }
+      if(count >= 4) return true;
+    }
+    return false;
+  }
+
+  function minimax(g, heights, depth, alpha, beta, maximizing, aiPlayer){
+    const validCols = getValidCols(heights);
+    if(depth === 0 || validCols.length === 0){
+      return evaluatePosition(g, aiPlayer);
+    }
+    const currentPlayer = maximizing ? aiPlayer : (aiPlayer === 'white' ? 'black' : 'white');
+
+    if(maximizing){
+      let value = -Infinity;
+      for(const col of validCols){
+        const g2 = cloneGrid(g), h2 = heights.slice();
+        const r = simulateDrop(g2, h2, col, currentPlayer);
+        if(checkWinGrid(g2, r, col, currentPlayer)){
+          value = Math.max(value, 100000 + depth);
+        } else {
+          value = Math.max(value, minimax(g2, h2, depth - 1, alpha, beta, false, aiPlayer));
+        }
+        alpha = Math.max(alpha, value);
+        if(alpha >= beta) break;
+      }
+      return value;
+    } else {
+      let value = Infinity;
+      for(const col of validCols){
+        const g2 = cloneGrid(g), h2 = heights.slice();
+        const r = simulateDrop(g2, h2, col, currentPlayer);
+        if(checkWinGrid(g2, r, col, currentPlayer)){
+          value = Math.min(value, -100000 - depth);
+        } else {
+          value = Math.min(value, minimax(g2, h2, depth - 1, alpha, beta, true, aiPlayer));
+        }
+        beta = Math.min(beta, value);
+        if(alpha >= beta) break;
+      }
+      return value;
+    }
+  }
+
+  function cpuChooseColumn(){
+    const aiPlayer = cpuSide();
+    const CPU_DEPTH = cpuDifficulty === 'master' ? 5 : 4;
+    const validCols = getValidCols(colHeights);
+    let bestCol = validCols[0];
+    let bestScore = -Infinity;
+    // Prefer center columns when scores tie, by iterating from center outward.
+    const centerOrder = validCols.slice().sort((a,b) => Math.abs(a-3) - Math.abs(b-3));
+    for(const col of centerOrder){
+      const g2 = cloneGrid(grid), h2 = colHeights.slice();
+      const r = simulateDrop(g2, h2, col, aiPlayer);
+      let score;
+      if(checkWinGrid(g2, r, col, aiPlayer)){
+        score = 100000 + CPU_DEPTH;
+      } else {
+        score = minimax(g2, h2, CPU_DEPTH, -Infinity, Infinity, false, aiPlayer);
+      }
+      if(score > bestScore){ bestScore = score; bestCol = col; }
+    }
+    return bestCol;
+  }
+
+  function cpuTakeTurn(){
+    cpuThinking = false;
+    if(gameOver || !vsCPU || turn !== cpuSide()) return;
+    const col = cpuChooseColumn();
+    cpuMovesMade++;
+    dropInColumn(col);
+  }
 
   function resetBoard(){
     grid = Array.from({length:ROWS}, () => Array(COLS).fill(null));
     colHeights = Array(COLS).fill(0);
     turn = 'white';
     gameOver = false;
+    cpuMovesMade = 0;
     document.getElementById('chipLayer').innerHTML = '';
     document.getElementById('winnerOverlay').classList.remove('show');
     renderBoardHoles();
     renderColButtons();
     updateTurnUI(false);
+
+    if(vsCPU && cpuSide() === 'white' && !gameOver){
+      cpuThinking = true;
+      document.getElementById('statusText').textContent = (cpuDifficulty === 'master' ? '達人CPU' : 'CPU') + '（白）が考え中…';
+      updateColButtonsState();
+      setTimeout(cpuTakeTurn, 1500);
+    }
   }
 
   function resetAll(){
@@ -386,7 +603,7 @@
   function updateColButtonsState(){
     const btns = document.querySelectorAll('.col-btn');
     btns.forEach((btn, c) => {
-      btn.disabled = gameOver || colHeights[c] >= ROWS;
+      btn.disabled = gameOver || colHeights[c] >= ROWS || (vsCPU && turn === cpuSide());
     });
   }
 
@@ -446,6 +663,14 @@
 
     turn = turn === 'white' ? 'black' : 'white';
     updateTurnUI(true);
+
+    if(vsCPU && turn === cpuSide() && !gameOver){
+      cpuThinking = true;
+      const sideLabel = cpuSide() === 'white' ? '白' : '黒';
+      document.getElementById('statusText').textContent = (cpuDifficulty === 'master' ? '達人CPU' : 'CPU') + '（' + sideLabel + '）が考え中…';
+      updateColButtonsState();
+      setTimeout(cpuTakeTurn, cpuMovesMade === 0 ? 1500 : 550);
+    }
   }
 
   function checkWin(r, c, player){
@@ -483,6 +708,36 @@
     }
     overlay.classList.add('show');
   }
+
+  function setMode(newVsCPU, newDifficulty){
+    if(vsCPU === newVsCPU && cpuDifficulty === newDifficulty) return;
+    vsCPU = newVsCPU;
+    cpuDifficulty = newDifficulty;
+    document.getElementById('modeTwoPlayerBtn').classList.toggle('active', !vsCPU);
+    document.getElementById('modeCPUBtn').classList.toggle('active', vsCPU && cpuDifficulty === 'normal');
+    document.getElementById('modeCPUMasterBtn').classList.toggle('active', vsCPU && cpuDifficulty === 'master');
+    document.getElementById('sideToggleRow').classList.toggle('hidden', !vsCPU);
+    resetBoard();
+  }
+
+  document.getElementById('modeTwoPlayerBtn').addEventListener('click', () => setMode(false, 'normal'));
+  document.getElementById('modeCPUBtn').addEventListener('click', () => setMode(true, 'normal'));
+  document.getElementById('modeCPUMasterBtn').addEventListener('click', () => setMode(true, 'master'));
+
+  document.getElementById('sideWhiteBtn').addEventListener('click', () => {
+    if(humanSide === 'white') return;
+    humanSide = 'white';
+    document.getElementById('sideWhiteBtn').classList.add('active');
+    document.getElementById('sideBlackBtn').classList.remove('active');
+    resetBoard();
+  });
+  document.getElementById('sideBlackBtn').addEventListener('click', () => {
+    if(humanSide === 'black') return;
+    humanSide = 'black';
+    document.getElementById('sideBlackBtn').classList.add('active');
+    document.getElementById('sideWhiteBtn').classList.remove('active');
+    resetBoard();
+  });
 
   document.getElementById('newGameBtn').addEventListener('click', resetAll);
   document.getElementById('againBtn').addEventListener('click', resetBoard);
