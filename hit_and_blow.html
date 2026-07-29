@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>ヒット＆ブロー — 3桁の暗証番号解読</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Jost:wght@500;600;700&display=swap');
@@ -23,16 +23,49 @@
 
   *{ box-sizing:border-box; }
 
+  html{
+    height: 100%;
+    overflow: hidden;
+    touch-action: manipulation;
+  }
+
+  .home-btn{
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 100;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    color: #fff;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 3px;
+    padding: 7px 12px;
+    text-decoration:none;
+    backdrop-filter: blur(4px);
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .home-btn:hover{ background: rgba(255,255,255,0.24); color:#fff; border-color:#fff; }
+
   body{
     margin:0;
-    min-height:100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
     background:
       radial-gradient(ellipse at 50% -10%, #1c1c1c 0%, #0a0a0a 55%, #000000 100%);
     font-family:'Zen Kaku Gothic New', sans-serif;
     color: var(--silver);
     display:flex;
     justify-content:center;
-    padding: 18px 12px 40px;
+    align-items:flex-start;
+    padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
   }
 
   .app{
@@ -41,14 +74,14 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:16px;
+    gap:10px;
   }
 
-  header{ text-align:center; margin-top:2px; }
+  header{ text-align:center; margin-top:0; }
   h1{
     font-family:'Kaisei Decol', serif;
     font-weight:700;
-    font-size: clamp(1.4rem, 6vw, 1.8rem);
+    font-size: clamp(1.2rem, 5.5vw, 1.6rem);
     letter-spacing: 0.06em;
     margin:0;
     color:#fff;
@@ -56,11 +89,11 @@
   }
   h1 .small{
     display:block;
-    font-size:0.58rem;
-    letter-spacing:0.38em;
+    font-size:0.55rem;
+    letter-spacing:0.36em;
     font-weight:500;
     color:var(--silver-dim);
-    margin-top:8px;
+    margin-top:4px;
     text-transform: uppercase;
   }
 
@@ -68,14 +101,30 @@
     display:flex;
     align-items:center;
     gap:10px;
-    min-height: 44px;
+    min-height: 36px;
     border-top: 1px solid var(--hairline);
     border-bottom: 1px solid var(--hairline);
-    padding: 8px 22px;
+    padding: 6px 20px;
     width: 100%;
     max-width: 380px;
     justify-content:center;
   }
+
+  .mode-toggle-row{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  .mode-toggle-btn{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.66rem;
+    letter-spacing:0.06em;
+    color: var(--silver);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--silver-dim);
+    border-radius:3px;
+    padding: 6px 11px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .mode-toggle-btn.active{ background:#fff; color:#141414; border-color:#fff; }
   .seal{
     font-family:'Kaisei Decol', serif;
     font-weight:500;
@@ -99,10 +148,11 @@
 
   /* --- card panel (shared by setup / handoff / game) --- */
   .panel{
+    position:relative;
     width:100%;
     background: linear-gradient(160deg, var(--frame-hi), var(--frame-mid) 45%, var(--frame-low));
     border-radius: 6px;
-    padding: 26px 24px;
+    padding: 18px 20px;
     box-shadow:
       0 16px 32px rgba(0,0,0,0.6),
       inset 0 1px 0 rgba(255,255,255,0.12),
@@ -110,7 +160,49 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:16px;
+    gap:12px;
+  }
+
+  /* --- decorative safe combination dial --- */
+  .safe-dial{
+    position:absolute;
+    top:10px; right:10px;
+    width:44px; height:44px;
+    z-index:2;
+    pointer-events:none;
+  }
+  .safe-dial-ticks{
+    position:absolute; inset:0;
+    border-radius:50%;
+    background:
+      repeating-conic-gradient(from 0deg, rgba(255,255,255,0.6) 0deg 1.5deg, transparent 1.5deg 15deg);
+    box-shadow:
+      0 3px 6px rgba(0,0,0,0.6),
+      inset 0 0 0 2px rgba(255,255,255,0.15),
+      inset 0 0 6px rgba(0,0,0,0.5);
+    transition: transform 0.45s cubic-bezier(.3,1.6,.6,1);
+  }
+  .safe-dial-knob{
+    position:absolute;
+    top:50%; left:50%;
+    width:58%; height:58%;
+    transform: translate(-50%,-50%);
+    border-radius:50%;
+    background: radial-gradient(circle at 35% 30%, #4a4a4a, #141414 70%);
+    box-shadow:
+      inset 0 2px 3px rgba(255,255,255,0.2),
+      inset 0 -2px 4px rgba(0,0,0,0.6);
+  }
+  .safe-dial-pointer{
+    position:absolute;
+    top:-3px; left:50%;
+    width:0; height:0;
+    border-left:4px solid transparent;
+    border-right:4px solid transparent;
+    border-bottom:7px solid #f2efe6;
+    transform: translateX(-50%);
+    z-index:3;
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.6));
   }
   .panel-title{
     font-family:'Kaisei Decol', serif;
@@ -130,15 +222,39 @@
   /* --- digit dial inputs --- */
   .dial-row{
     display:flex;
-    gap:12px;
+    gap:10px;
   }
   .dial{
-    width: 54px; height: 64px;
+    width: 42px; height: 50px;
     background: var(--void);
     border-radius: 4px;
     box-shadow: inset 0 4px 10px rgba(0,0,0,0.8), inset 0 0 0 1px var(--void-rim);
     display:flex; align-items:center; justify-content:center;
   }
+  .keypad{
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+    width: 100%;
+    max-width: 220px;
+  }
+  .keypad-btn{
+    height: 34px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--silver-dim);
+    color: #fff;
+    font-family:'Jost', sans-serif;
+    font-weight:600;
+    font-size: 0.9rem;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background .1s ease, transform .1s ease;
+  }
+  .keypad-btn:active{ background: rgba(255,255,255,0.18); transform: scale(0.95); }
+  .keypad-btn.blank{ visibility:hidden; pointer-events:none; }
+  .keypad-btn.backspace{ font-size: 1rem; color: var(--silver-dim); }
   .dial input{
     width:100%; height:100%;
     background: transparent;
@@ -211,8 +327,8 @@
     background: rgba(255,255,255,0.03);
     border: 1px solid var(--hairline);
     border-radius: 4px;
-    padding: 10px;
-    min-height: 90px;
+    padding: 8px;
+    min-height: 70px;
   }
   .history-col h3{
     font-family:'Kaisei Decol', serif;
@@ -227,7 +343,7 @@
     display:flex;
     flex-direction:column;
     gap:6px;
-    max-height: 220px;
+    max-height: 140px;
     overflow-y:auto;
   }
   .history-item{
@@ -328,6 +444,7 @@
 </style>
 </head>
 <body>
+<a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
 <div class="app">
 
   <header>
@@ -336,13 +453,28 @@
 
   <!-- SETUP SCREEN -->
   <div id="setupScreen" class="panel">
+    <div class="safe-dial" id="setupSafeDial">
+      <div class="safe-dial-ticks" id="setupSafeDialTicks"></div>
+      <div class="safe-dial-knob"></div>
+      <div class="safe-dial-pointer"></div>
+    </div>
+    <div class="mode-toggle-row" id="modeToggleRow">
+      <button class="mode-toggle-btn active" id="modeTwoPlayerBtn">2人対戦</button>
+      <button class="mode-toggle-btn" id="modeCPUBtn">CPU対戦</button>
+      <button class="mode-toggle-btn" id="modeCPUMasterBtn">達人CPU</button>
+    </div>
+    <div class="mode-toggle-row hidden" id="sideToggleRow">
+      <button class="mode-toggle-btn active" id="sideSenteBtn">先行で対戦</button>
+      <button class="mode-toggle-btn" id="sideGoteBtn">後攻で対戦</button>
+    </div>
     <div class="panel-title" id="setupTitle">白の暗証番号を設定してください</div>
     <div class="panel-sub">0〜9の中から重複しない3桁を決めてください。相手には見えません。</div>
     <div class="dial-row" id="setupDialRow">
-      <div class="dial"><input type="text" inputmode="numeric" maxlength="1" data-idx="0"></div>
-      <div class="dial"><input type="text" inputmode="numeric" maxlength="1" data-idx="1"></div>
-      <div class="dial"><input type="text" inputmode="numeric" maxlength="1" data-idx="2"></div>
+      <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="0"></div>
+      <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="1"></div>
+      <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="2"></div>
     </div>
+    <div class="keypad" id="setupKeypad"></div>
     <div class="inline-error" id="setupError"></div>
     <button class="main-btn" id="setupConfirmBtn">決定</button>
   </div>
@@ -361,12 +493,18 @@
     </div>
     <div class="status-text" id="statusText">相手の3桁を予想してください</div>
 
-    <div class="guess-area panel">
-      <div class="dial-row" id="guessDialRow">
-        <div class="dial"><input type="text" inputmode="numeric" maxlength="1" data-idx="0"></div>
-        <div class="dial"><input type="text" inputmode="numeric" maxlength="1" data-idx="1"></div>
-        <div class="dial"><input type="text" inputmode="numeric" maxlength="1" data-idx="2"></div>
+    <div class="guess-area panel" id="guessArea">
+      <div class="safe-dial" id="guessSafeDial">
+        <div class="safe-dial-ticks" id="guessSafeDialTicks"></div>
+        <div class="safe-dial-knob"></div>
+        <div class="safe-dial-pointer"></div>
       </div>
+      <div class="dial-row" id="guessDialRow">
+        <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="0"></div>
+        <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="1"></div>
+        <div class="dial"><input type="text" inputmode="none" readonly maxlength="1" data-idx="2"></div>
+      </div>
+      <div class="keypad" id="guessKeypad"></div>
       <div class="inline-error" id="guessError"></div>
       <button class="main-btn" id="guessSubmitBtn">予想する</button>
     </div>
@@ -415,17 +553,57 @@
 <script>
 (function(){
   let secrets, guesses, turn, phase, settingFor;
+  let vsCPU = false;
+  let cpuDifficulty = 'normal';
+  let humanSide = 'sente';
+  let cpuCandidates = [];
+  let cpuMovesMade = 0;
+
+  function cpuSide(){
+    if(!vsCPU) return null;
+    return humanSide === 'sente' ? 'gote' : 'sente';
+  }
+
+  function allPossibleCodes(){
+    const codes = [];
+    for(let a=0;a<10;a++){
+      for(let b=0;b<10;b++){
+        for(let c=0;c<10;c++){
+          if(a!==b && b!==c && a!==c) codes.push([a,b,c]);
+        }
+      }
+    }
+    return codes;
+  }
+
+  function randomCode(){
+    const codes = allPossibleCodes();
+    return codes[Math.floor(Math.random()*codes.length)];
+  }
 
   function resetAll(){
     secrets = { sente: null, gote: null };
     guesses = { sente: [], gote: [] };
     turn = 'sente';
     phase = 'setup';
-    settingFor = 'sente';
+    cpuCandidates = allPossibleCodes();
+    dialRotation.setupDialRow = 0;
+    dialRotation.guessDialRow = 0;
+    ['setupSafeDialTicks','guessSafeDialTicks'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.style.transform = 'rotate(0deg)';
+    });
+    cpuMovesMade = 0;
     document.getElementById('winnerOverlay').classList.remove('show');
     document.getElementById('senteHistory').innerHTML = '<div class="empty-hint">まだありません</div>';
     document.getElementById('goteHistory').innerHTML = '<div class="empty-hint">まだありません</div>';
-    showSetupFor('sente');
+
+    if(vsCPU){
+      secrets[cpuSide()] = randomCode();
+      showSetupFor(humanSide);
+    } else {
+      showSetupFor('sente');
+    }
     show('setupScreen');
   }
 
@@ -474,6 +652,59 @@
     });
   }
 
+  function buildKeypad(containerId, rowId){
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    const keys = ['1','2','3','4','5','6','7','8','9','','0','back'];
+    keys.forEach(key => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      if(key === ''){
+        btn.className = 'keypad-btn blank';
+      } else if(key === 'back'){
+        btn.className = 'keypad-btn backspace';
+        btn.textContent = '⌫';
+        btn.setAttribute('aria-label', '1文字消す');
+        btn.addEventListener('click', () => keypadBackspace(rowId));
+      } else {
+        btn.className = 'keypad-btn';
+        btn.textContent = key;
+        btn.addEventListener('click', () => keypadDigit(rowId, key));
+      }
+      container.appendChild(btn);
+    });
+  }
+
+  const dialRotation = { setupDialRow: 0, guessDialRow: 0 };
+
+  function spinSafeDial(rowId, delta){
+    const ticksId = rowId === 'setupDialRow' ? 'setupSafeDialTicks' : 'guessSafeDialTicks';
+    dialRotation[rowId] += delta;
+    const el = document.getElementById(ticksId);
+    if(el) el.style.transform = 'rotate(' + dialRotation[rowId] + 'deg)';
+  }
+
+  function keypadDigit(rowId, digit){
+    const inputs = Array.from(document.querySelectorAll('#' + rowId + ' input'));
+    const idx = inputs.findIndex(inp => inp.value === '');
+    if(idx === -1) return;
+    inputs[idx].value = digit;
+    inputs[idx].dispatchEvent(new Event('input'));
+    spinSafeDial(rowId, 55 + Number(digit) * 7);
+  }
+
+  function keypadBackspace(rowId){
+    const inputs = Array.from(document.querySelectorAll('#' + rowId + ' input'));
+    let idx = -1;
+    for(let i = inputs.length - 1; i >= 0; i--){
+      if(inputs[i].value !== ''){ idx = i; break; }
+    }
+    if(idx === -1) return;
+    inputs[idx].value = '';
+    inputs[idx].dispatchEvent(new Event('input'));
+    spinSafeDial(rowId, -40);
+  }
+
   function readDials(rowId){
     return Array.from(document.querySelectorAll('#' + rowId + ' input')).map(inp => inp.value);
   }
@@ -500,6 +731,15 @@
       return;
     }
     secrets[settingFor] = values.map(Number);
+
+    if(vsCPU){
+      document.getElementById('handoffTitle').textContent = '設定が完了しました';
+      document.getElementById('handoffSub').textContent = 'CPUとの対局を開始します。';
+      show('handoffScreen');
+      document.getElementById('handoffBtn').onclick = startGame;
+      return;
+    }
+
     if(settingFor === 'sente'){
       document.getElementById('handoffTitle').textContent = '白の設定が完了しました';
       document.getElementById('handoffSub').textContent = '端末を後手（黒）に渡してください。準備ができたら進めます。';
@@ -518,6 +758,9 @@
     turn = 'sente';
     show('gameScreen');
     updateTurnUI(false);
+    if(vsCPU && turn === cpuSide()){
+      triggerCpuTurn();
+    }
   }
 
   function updateTurnUI(pulse){
@@ -525,10 +768,68 @@
     seal.className = 'seal' + (turn === 'gote' ? ' gote' : '') + (pulse ? ' pulse' : '');
     if(pulse){ void seal.offsetWidth; seal.classList.add('pulse'); }
     seal.textContent = (turn === 'sente' ? '白' : '黒') + ' の番';
-    document.getElementById('statusText').textContent = '相手の3桁を予想してください（相手：' + (turn === 'sente' ? '黒' : '白') + '）';
-    clearDials('guessDialRow');
-    document.getElementById('guessError').textContent = '';
-    focusFirstDial('guessDialRow');
+
+    const isCpuTurn = vsCPU && turn === cpuSide();
+    document.getElementById('guessSubmitBtn').disabled = isCpuTurn;
+    document.querySelectorAll('#guessDialRow input').forEach(inp => { inp.disabled = isCpuTurn; });
+
+    if(isCpuTurn){
+      document.getElementById('statusText').textContent = (cpuDifficulty === 'master' ? '達人CPU' : 'CPU') + 'が考え中…';
+    } else {
+      document.getElementById('statusText').textContent = '相手の3桁を予想してください（相手：' + (turn === 'sente' ? '黒' : '白') + '）';
+      clearDials('guessDialRow');
+      document.getElementById('guessError').textContent = '';
+      focusFirstDial('guessDialRow');
+    }
+  }
+
+  function cpuChooseGuess(){
+    if(cpuCandidates.length === 0) cpuCandidates = allPossibleCodes();
+    if(cpuDifficulty !== 'master'){
+      return cpuCandidates[Math.floor(Math.random() * cpuCandidates.length)];
+    }
+    let bestGuess = cpuCandidates[0];
+    let bestWorst = Infinity;
+    for(const guess of cpuCandidates){
+      const buckets = new Map();
+      for(const cand of cpuCandidates){
+        const r = computeHitBlow(guess, cand);
+        const key = r.hit + '-' + r.blow;
+        buckets.set(key, (buckets.get(key) || 0) + 1);
+      }
+      const worst = Math.max(...buckets.values());
+      if(worst < bestWorst){ bestWorst = worst; bestGuess = guess; }
+    }
+    return bestGuess;
+  }
+
+  function triggerCpuTurn(){
+    updateTurnUI(false);
+    setTimeout(cpuTakeTurn, cpuMovesMade === 0 ? 1500 : 700);
+  }
+
+  function cpuTakeTurn(){
+    if(phase !== 'playing' || !vsCPU || turn !== cpuSide()) return;
+    const guess = cpuChooseGuess();
+    const humanSecret = secrets[humanSide];
+    const result = computeHitBlow(guess, humanSecret);
+    guesses[turn].push({ guess, result });
+    renderHistory(turn);
+
+    cpuCandidates = cpuCandidates.filter(c => {
+      const r = computeHitBlow(guess, c);
+      return r.hit === result.hit && r.blow === result.blow;
+    });
+    cpuMovesMade++;
+
+    if(result.hit === 3){
+      phase = 'over';
+      showWinner(turn, humanSecret);
+      return;
+    }
+
+    turn = humanSide;
+    updateTurnUI(true);
   }
 
   function computeHitBlow(guess, secret){
@@ -549,6 +850,7 @@
 
   document.getElementById('guessSubmitBtn').addEventListener('click', () => {
     if(phase !== 'playing') return;
+    if(vsCPU && turn === cpuSide()) return;
     const values = readDials('guessDialRow');
     const check = validateDigits(values);
     if(!check.ok){
@@ -570,6 +872,10 @@
 
     turn = opponent;
     updateTurnUI(true);
+
+    if(vsCPU && turn === cpuSide()){
+      triggerCpuTurn();
+    }
   });
 
   function renderHistory(who){
@@ -612,8 +918,39 @@
     document.getElementById('rules').classList.toggle('open');
   });
 
+  function setMode(newVsCPU, newDifficulty){
+    if(vsCPU === newVsCPU && cpuDifficulty === newDifficulty) return;
+    vsCPU = newVsCPU;
+    cpuDifficulty = newDifficulty;
+    document.getElementById('modeTwoPlayerBtn').classList.toggle('active', !vsCPU);
+    document.getElementById('modeCPUBtn').classList.toggle('active', vsCPU && cpuDifficulty === 'normal');
+    document.getElementById('modeCPUMasterBtn').classList.toggle('active', vsCPU && cpuDifficulty === 'master');
+    document.getElementById('sideToggleRow').classList.toggle('hidden', !vsCPU);
+    resetAll();
+  }
+  document.getElementById('modeTwoPlayerBtn').addEventListener('click', () => setMode(false, 'normal'));
+  document.getElementById('modeCPUBtn').addEventListener('click', () => setMode(true, 'normal'));
+  document.getElementById('modeCPUMasterBtn').addEventListener('click', () => setMode(true, 'master'));
+
+  document.getElementById('sideSenteBtn').addEventListener('click', () => {
+    if(humanSide === 'sente') return;
+    humanSide = 'sente';
+    document.getElementById('sideSenteBtn').classList.add('active');
+    document.getElementById('sideGoteBtn').classList.remove('active');
+    resetAll();
+  });
+  document.getElementById('sideGoteBtn').addEventListener('click', () => {
+    if(humanSide === 'gote') return;
+    humanSide = 'gote';
+    document.getElementById('sideGoteBtn').classList.add('active');
+    document.getElementById('sideSenteBtn').classList.remove('active');
+    resetAll();
+  });
+
   setupDialNav('setupDialRow');
   setupDialNav('guessDialRow');
+  buildKeypad('setupKeypad', 'setupDialRow');
+  buildKeypad('guessKeypad', 'guessDialRow');
 
   resetAll();
 })();
