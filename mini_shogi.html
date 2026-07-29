@@ -288,6 +288,12 @@
   }
 
   .hidden{ display:none !important; }
+  .chrome-hidden{
+    opacity:0 !important;
+    visibility:hidden !important;
+    pointer-events:none !important;
+    transition: opacity .2s ease;
+  }
   .board{
     display:grid;
     grid-template-columns: repeat(3, 1fr);
@@ -461,7 +467,17 @@
     margin-bottom:10px;
     letter-spacing:0.04em;
   }
-  .winner-card p{ color:var(--silver-dim); font-size:0.8rem; margin: 0 0 20px; letter-spacing:0.04em; }
+  .winner-card p{ color:var(--silver-dim); font-size:0.8rem; margin: 0 0 12px; letter-spacing:0.04em; }
+  .loser-text{
+    display:inline-block;
+    font-size:0.7rem;
+    color: var(--silver-dim);
+    letter-spacing:0.06em;
+    border: 1px solid var(--hairline);
+    border-radius: 20px;
+    padding: 5px 14px;
+    margin-bottom: 18px;
+  }
 </style>
 </head>
 <body>
@@ -523,6 +539,7 @@
   <div class="winner-card">
     <div id="winnerText" class="big">先手の勝ち！</div>
     <p>王を討ち取りました</p>
+    <div id="loserText" class="loser-text">後手は負けました</div>
     <button id="againBtn">もう一度</button>
   </div>
 </div>
@@ -577,6 +594,26 @@
     return humanSide === 'sente' ? 'gote' : 'sente';
   }
 
+  function updateChromeVisibility(){
+    const started = moveHistory.length > 0;
+    const header = document.querySelector('header');
+    const modeRow = document.getElementById('modeToggleRow');
+    const sideRow = document.getElementById('sideToggleRow');
+
+    header.classList.toggle('chrome-hidden', started);
+    modeRow.classList.toggle('chrome-hidden', started);
+
+    if(!vsCPU){
+      sideRow.classList.remove('chrome-hidden');
+      sideRow.classList.add('hidden');
+    } else if(started){
+      sideRow.classList.remove('hidden');
+      sideRow.classList.add('chrome-hidden');
+    } else {
+      sideRow.classList.remove('hidden', 'chrome-hidden');
+    }
+  }
+
   function resetGame(){
     board = initialBoard();
     hands = { sente: {}, gote: {} };
@@ -594,6 +631,7 @@
     document.querySelector('.app').classList.toggle('gote-tray-bottom', vsCPU && humanSide === 'gote');
     document.getElementById('undoBtn').classList.toggle('hidden', cpuSide() === 'sente');
     document.getElementById('undoBtnGote').classList.toggle('hidden', cpuSide() === 'gote');
+    updateChromeVisibility();
 
     updateUndoButton();
     render();
@@ -614,6 +652,7 @@
     rejectionCount = 0;
     undoBlocked = false;
     updateUndoButton();
+    updateChromeVisibility();
   }
 
   function updateUndoButton(){
@@ -637,6 +676,7 @@
     undoBlocked = false;
     document.getElementById('winnerOverlay').classList.remove('show');
     updateUndoButton();
+    updateChromeVisibility();
     render();
   }
 
@@ -930,7 +970,9 @@
   function showWinner(winner){
     const overlay = document.getElementById('winnerOverlay');
     const text = document.getElementById('winnerText');
+    const loser = winner === 'sente' ? 'gote' : 'sente';
     text.textContent = (winner === 'sente' ? '先手' : '後手') + 'の勝ち！';
+    document.getElementById('loserText').textContent = (loser === 'sente' ? '先手' : '後手') + 'は負けました';
     overlay.classList.add('show');
   }
 
@@ -1102,7 +1144,6 @@
     document.getElementById('modeTwoPlayerBtn').classList.toggle('active', !vsCPU);
     document.getElementById('modeCPUBtn').classList.toggle('active', vsCPU && cpuDifficulty === 'normal');
     document.getElementById('modeCPUMasterBtn').classList.toggle('active', vsCPU && cpuDifficulty === 'master');
-    document.getElementById('sideToggleRow').classList.toggle('hidden', !vsCPU);
     resetGame();
   }
 
