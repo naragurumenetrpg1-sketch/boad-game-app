@@ -299,34 +299,29 @@
   }
   .rules ul{ margin:4px 0; padding-left:1.1em; }
 
-  .winner-overlay{
-    position:fixed; inset:0;
-    background: rgba(0,0,0,0.82);
-    display:none;
-    align-items:center; justify-content:center;
-    z-index:20;
-    padding: 20px;
-  }
-  .winner-overlay.show{ display:flex; }
-  .winner-card{
-    background: linear-gradient(180deg, #161616, #050505);
+  .result-banner{
+    width:100%;
+    max-width: 380px;
+    background: linear-gradient(160deg, #202020, #141414 45%, #030303);
     border: 1px solid var(--hairline);
-    border-radius: 4px;
-    padding: 32px 34px;
-    text-align:center;
-    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-    max-width: 300px;
+    border-radius: 6px;
+    padding: 10px 14px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
   }
-  .winner-card .big{
+  .result-banner.hidden{ display:none; }
+  .result-text{
     font-family:'Kaisei Decol', serif;
     font-weight:700;
-    font-size:1.3rem;
+    font-size:0.95rem;
     color:#fff;
-    margin-bottom:10px;
-    display:flex; align-items:center; justify-content:center; gap:10px;
-    letter-spacing: 0.04em;
+    display:flex; align-items:center; gap:8px;
+    letter-spacing:0.03em;
   }
-  .winner-card p{ color:var(--silver-dim); font-size:0.8rem; margin: 0 0 20px; letter-spacing:0.04em; }
+  .result-sub{ font-size:0.66rem; color:var(--silver-dim); margin-top:2px; letter-spacing:0.03em; }
 </style>
 </head>
 <body>
@@ -348,6 +343,14 @@
   <div class="score-row">
     <div class="score-pill"><span class="dot white"></span>白 <b id="whiteScore">0</b></div>
     <div class="score-pill"><span class="dot black"></span>黒 <b id="blackScore">0</b></div>
+  </div>
+
+  <div id="resultBanner" class="result-banner hidden">
+    <div>
+      <div class="result-text" id="winnerText">白の勝ち！</div>
+      <div class="result-sub" id="winnerSub">4つ並びました</div>
+    </div>
+    <button id="againBtn" class="main-btn">次の対局へ</button>
   </div>
 
   <div class="board-frame">
@@ -385,14 +388,6 @@
     </ul>
   </div>
 
-</div>
-
-<div id="winnerOverlay" class="winner-overlay">
-  <div class="winner-card">
-    <div id="winnerText" class="big">白の勝ち！</div>
-    <p id="winnerSub">4つ並びました</p>
-    <button id="againBtn" class="main-btn">次の対局へ</button>
-  </div>
 </div>
 
 <script>
@@ -553,7 +548,7 @@
     gameOver = false;
     cpuMovesMade = 0;
     document.getElementById('chipLayer').innerHTML = '';
-    document.getElementById('winnerOverlay').classList.remove('show');
+    document.getElementById('resultBanner').classList.add('hidden');
     renderBoardHoles();
     renderColButtons();
     updateTurnUI(false);
@@ -695,7 +690,7 @@
   }
 
   function showWinner(winner, draw){
-    const overlay = document.getElementById('winnerOverlay');
+    const banner = document.getElementById('resultBanner');
     const text = document.getElementById('winnerText');
     const sub = document.getElementById('winnerSub');
     if(draw){
@@ -703,10 +698,10 @@
       sub.textContent = '盤面が埋まりました';
     } else {
       const dotColor = winner === 'white' ? 'var(--ivory-mid)' : 'var(--ebony-mid)';
-      text.innerHTML = '<span style="display:inline-block;width:16px;height:16px;border-radius:50%;background:' + dotColor + ';box-shadow:0 0 0 1px var(--silver-dim);"></span>' + (winner === 'white' ? '白' : '黒') + 'の勝ち！';
+      text.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:' + dotColor + ';box-shadow:0 0 0 1px var(--silver-dim);flex-shrink:0;"></span>' + (winner === 'white' ? '白' : '黒') + 'の勝ち！';
       sub.textContent = '4つ並びました';
     }
-    overlay.classList.add('show');
+    banner.classList.remove('hidden');
   }
 
   function setMode(newVsCPU, newDifficulty){
