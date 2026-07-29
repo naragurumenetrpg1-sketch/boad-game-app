@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>ダイス21 — 対面プレイ版</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Jost:wght@500;600;700&display=swap');
@@ -28,10 +28,28 @@
     font-family:'Zen Kaku Gothic New', sans-serif;
     color: var(--silver);
     overflow:hidden;
-    height:100vh;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+    height:100dvh;
     display:flex;
     flex-direction:column;
   }
+
+  .home-link{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:0.62rem;
+    font-weight:700;
+    letter-spacing:0.05em;
+    color:#fff;
+    text-decoration:none;
+    background: transparent;
+    border: 1px solid var(--silver-dim);
+    border-radius:2px;
+    padding: 5px 8px;
+  }
+  .home-link:hover{ background: rgba(255,255,255,0.08); }
 
   /* --- middle strip (shared, unrotated) --- */
   .mid-strip{
@@ -39,8 +57,10 @@
     display:flex;
     align-items:center;
     justify-content:space-between;
-    gap:10px;
-    padding: 8px 14px;
+    flex-wrap: wrap;
+    row-gap: 4px;
+    gap:8px;
+    padding: 6px 12px;
     background: #000;
     border-top: 1px solid var(--hairline);
     border-bottom: 1px solid var(--hairline);
@@ -75,6 +95,7 @@
     cursor:pointer;
   }
   .mini-btn:hover{ background: rgba(255,255,255,0.08); }
+  .mini-btn.active{ background:#fff; color:#141414; border-color:#fff; }
 
   /* --- halves --- */
   .halves{
@@ -179,8 +200,22 @@
   button.play-btn:hover:not(:disabled){ background: rgba(255,255,255,0.08); border-color:#fff; }
   button.play-btn:disabled{ opacity:0.25; cursor:default; }
 
-  .next-round-wrap{ display:flex; justify-content:center; padding: 4px 0; }
+  .next-round-wrap{
+    position:fixed;
+    top:50%; left:50%;
+    transform: translate(-50%,-50%);
+    z-index: 15;
+    display:flex;
+    justify-content:center;
+  }
   .next-round-wrap.hidden{ display:none; }
+  .next-round-wrap .play-btn{
+    background: #fff;
+    color:#141414;
+    border-color:#fff;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.6);
+  }
+  .next-round-wrap .play-btn:hover{ background:#eee; }
 
   /* --- rules overlay --- */
   .rules-overlay{
@@ -254,9 +289,11 @@
   </div>
 
   <div class="mid-strip">
+    <a href="index.html" class="home-link">← ホーム</a>
     <span class="title">ダイス21</span>
     <span class="score">白 <b id="whiteWins">0</b> － <b id="blackWins">0</b> 黒</span>
     <div class="mid-btns">
+      <button class="mini-btn" id="modeCPUToggleBtn">CPU対戦</button>
       <button class="mini-btn" id="newGameBtn">スコアリセット</button>
       <button class="mini-btn" id="rulesBtn">遊び方</button>
     </div>
@@ -270,11 +307,13 @@
       <h2>遊び方（対面プレイ版）</h2>
       <ul>
         <li>画面は上下2つのエリアに分かれています。黒は上（画面が180度回転して表示されるので、向かい合わせに置いて使います）、白は下です</li>
+        <li>「CPU対戦」を押すと、黒をCPUが担当します。1人でも遊べます</li>
         <li>自分の番になると、自分側のボタンだけが押せるようになります</li>
         <li>「振る」でサイコロを振って合計に加算、「ストップ」でその手を終えます</li>
         <li>21を超えたらバースト（負け確定）、自動的に相手の番へ移ります</li>
         <li>両者の番が終わったら、バーストしていない方・21に近い方の勝ちです</li>
-        <li>両者バースト、または同じ合計なら引き分けです</li>
+        <li>2人とも21ちょうどだった場合は、サイコロを振った回数が少ない方の勝ちです</li>
+        <li>両者バースト、または21以外で同じ合計なら引き分けです</li>
       </ul>
       <button class="play-btn close-btn" id="closeRulesBtn">閉じる</button>
     </div>
@@ -286,7 +325,9 @@
     1: [5], 2: [1,9], 3: [1,5,9], 4: [1,3,7,9], 5: [1,3,5,7,9], 6: [1,3,4,6,7,9],
   };
 
-  let totals, busted, active, order, turnPtr, turn, phase, wins, rolling;
+  let totals, busted, active, order, turnPtr, turn, phase, wins, rolling, rollCounts;
+  let vsCPU = false;
+  let cpuThinking = false;
 
   function resetScore(){
     wins = { white:0, black:0 };
@@ -298,6 +339,7 @@
     totals = { white:0, black:0 };
     busted = { white:false, black:false };
     active = { white:true, black:true };
+    rollCounts = { white:0, black:0 };
     order = ['white','black'];
     turnPtr = 0;
     turn = order[turnPtr];
@@ -325,11 +367,42 @@
       const statusEl = document.getElementById(who + 'Status');
       statusEl.classList.remove('result');
       if(phase === 'playing'){
-        statusEl.textContent = isActive ? '振るかストップか選んでください' : '相手の番です';
+        const isCpuControlled = vsCPU && who === 'black';
+        if(isActive){
+          statusEl.textContent = isCpuControlled ? 'CPUが考え中…' : '振るかストップか選んでください';
+        } else {
+          statusEl.textContent = (vsCPU && who === 'white') ? 'CPUの番です' : '相手の番です';
+        }
       }
-      document.getElementById(who + 'RollBtn').disabled = !isActive;
-      document.getElementById(who + 'StandBtn').disabled = !isActive || totals[who] === 0;
+      document.getElementById(who + 'RollBtn').disabled = !isActive || (vsCPU && who === 'black');
+      document.getElementById(who + 'StandBtn').disabled = !isActive || totals[who] === 0 || (vsCPU && who === 'black');
     });
+
+    if(vsCPU && turn === 'black' && phase === 'playing' && active.black && !cpuThinking){
+      cpuThinking = true;
+      setTimeout(cpuTakeAction, 700);
+    }
+  }
+
+  function cpuTakeAction(){
+    cpuThinking = false;
+    if(!vsCPU || phase !== 'playing' || turn !== 'black' || !active.black) return;
+    const decision = cpuDecide();
+    if(decision === 'roll') roll('black');
+    else stand('black');
+  }
+
+  function cpuDecide(){
+    const cpuTotal = totals.black;
+    if(cpuTotal === 0) return 'roll';
+    const opponentFinal = !active.white;
+    if(opponentFinal){
+      if(busted.white) return 'stand';
+      if(cpuTotal > totals.white) return 'stand';
+      if(cpuTotal < totals.white) return 'roll';
+      return 'stand';
+    }
+    return cpuTotal <= 15 ? 'roll' : 'stand';
   }
 
   function setDieFace(who, value){
@@ -382,6 +455,7 @@
   function onRollResolved(who, value){
     rolling = false;
     totals[who] += value;
+    rollCounts[who]++;
     addMiniDie(who, value);
     document.getElementById(who + 'Total').textContent = totals[who];
 
@@ -429,13 +503,20 @@
     phase = 'over';
     const wBust = busted.white, bBust = busted.black;
     let winner = null;
+    let tiebreakByRolls = false;
 
     if(wBust && bBust) winner = null;
     else if(wBust) winner = 'black';
     else if(bBust) winner = 'white';
     else if(totals.white > totals.black) winner = 'white';
     else if(totals.black > totals.white) winner = 'black';
-    else winner = null;
+    else if(totals.white === totals.black && totals.white === 21){
+      if(rollCounts.white < rollCounts.black){ winner = 'white'; tiebreakByRolls = true; }
+      else if(rollCounts.black < rollCounts.white){ winner = 'black'; tiebreakByRolls = true; }
+      else winner = null;
+    } else {
+      winner = null;
+    }
 
     if(winner) wins[winner]++;
     updateScoreUI();
@@ -448,6 +529,7 @@
       document.getElementById(who + 'StandBtn').disabled = true;
       let msg;
       if(winner === null) msg = '引き分けです（合計 ' + totals[who] + (busted[who] ? ' ・ バースト' : '') + '）';
+      else if(tiebreakByRolls) msg = (winner === who ? 'あなたの勝ちです！' : 'あなたの負けです') + '（両者21・振った回数 ' + rollCounts[who] + '回で判定）';
       else if(winner === who) msg = 'あなたの勝ちです！（合計 ' + totals[who] + '）';
       else msg = 'あなたの負けです（合計 ' + totals[who] + (busted[who] ? ' ・ バースト' : '') + '）';
       statusEl.textContent = msg;
@@ -460,6 +542,14 @@
   document.getElementById('blackRollBtn').addEventListener('click', () => roll('black'));
   document.getElementById('whiteStandBtn').addEventListener('click', () => stand('white'));
   document.getElementById('blackStandBtn').addEventListener('click', () => stand('black'));
+
+  document.getElementById('modeCPUToggleBtn').addEventListener('click', () => {
+    vsCPU = !vsCPU;
+    document.getElementById('modeCPUToggleBtn').classList.toggle('active', vsCPU);
+    document.getElementById('modeCPUToggleBtn').textContent = vsCPU ? 'CPU対戦中' : 'CPU対戦';
+    document.querySelector('#blackHalf .name-label').textContent = vsCPU ? '黒（CPU）' : '黒';
+    resetScore();
+  });
 
   document.getElementById('nextRoundBtn').addEventListener('click', startRound);
   document.getElementById('newGameBtn').addEventListener('click', resetScore);
