@@ -37,19 +37,25 @@
     flex-direction:column;
   }
 
-  .home-link{
+  .home-btn{
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 100;
     font-family:'Zen Kaku Gothic New', sans-serif;
-    font-size:0.62rem;
     font-weight:700;
-    letter-spacing:0.05em;
-    color:#fff;
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    color: #fff;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 3px;
+    padding: 7px 12px;
     text-decoration:none;
-    background: transparent;
-    border: 1px solid var(--silver-dim);
-    border-radius:2px;
-    padding: 5px 8px;
+    backdrop-filter: blur(4px);
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
   }
-  .home-link:hover{ background: rgba(255,255,255,0.08); }
+  .home-btn:hover{ background: rgba(255,255,255,0.24); color:#fff; border-color:#fff; }
 
   /* --- middle strip (shared, unrotated) --- */
   .mid-strip{
@@ -249,6 +255,7 @@
 </style>
 </head>
 <body>
+<a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
 
   <div class="halves">
     <!-- BLACK half: rotated 180, sits at physical top -->
@@ -289,7 +296,6 @@
   </div>
 
   <div class="mid-strip">
-    <a href="index.html" class="home-link">← ホーム</a>
     <span class="title">ダイス21</span>
     <span class="score">白 <b id="whiteWins">0</b> － <b id="blackWins">0</b> 黒</span>
     <div class="mid-btns">
