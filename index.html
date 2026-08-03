@@ -9,1044 +9,6 @@
 
   :root{
     --hairline: rgba(255,255,255,0.14);
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-
-<title>対戦ゲーム集</title>
-
-<style>
-
-@import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&family=Jost:wght@500;600;700&display=swap');
-
-:root{
-  --silver:#cfcfcf;
-  --dim:#777;
-  --line:rgba(255,255,255,.15);
-}
-
-*{
-  box-sizing:border-box;
-  -webkit-tap-highlight-color:transparent;
-}
-
-html,
-body{
-
-  width:100%;
-  height:100%;
-
-  margin:0;
-
-  overflow:hidden;
-
-}
-
-body{
-
-  background:
-  radial-gradient(
-    ellipse at 50% -10%,
-    #222 0%,
-    #090909 55%,
-    #000 100%
-  );
-
-  color:white;
-
-  font-family:
-  'Zen Kaku Gothic New',
-  sans-serif;
-
-
-  display:flex;
-
-  justify-content:center;
-
-  align-items:center;
-
-}
-
-.app{
-
-  width:100%;
-  max-width:460px;
-
-  height:100vh;
-
-  padding:
-  25px 16px;
-
-  display:flex;
-
-  flex-direction:column;
-
-  justify-content:space-between;
-
-}
-
-/* ----------------
- header
----------------- */
-
-
-header{
-
-  text-align:center;
-
-}
-
-h1{
-
-  margin:0;
-
-  font-family:
-  'Kaisei Decol',
-  serif;
-
-  font-size:1.8rem;
-
-  letter-spacing:.15em;
-
-}
-
-.sub{
-
-  margin-top:8px;
-
-  color:#777;
-
-  font-size:.65rem;
-
-  letter-spacing:.4em;
-
-}
-
-/* ----------------
- slider
----------------- */
-
-
-.game-area{
-
-  width:100%;
-
-}
-
-
-
-.slider-title{
-
-  text-align:center;
-
-  color:#777;
-
-  font-size:.65rem;
-
-  letter-spacing:.35em;
-
-  margin-bottom:10px;
-
-}
-
-
-
-.game-slider{
-
-
-  width:100%;
-
-  display:flex;
-
-  gap:18px;
-
-  overflow-x:auto;
-
-
-  scroll-snap-type:x mandatory;
-
-
-  scrollbar-width:none;
-
-
-  padding:
-  15px 7.5%;
-
-
-}
-
-
-
-.game-slider::-webkit-scrollbar{
-
-  display:none;
-
-}
-
-
-
-/* card */
-
-
-.game-card{
-
-
-  flex:
-  0 0 85%;
-
-
-  height:270px;
-
-
-  border-radius:18px;
-
-
-  border:
-  1px solid var(--line);
-
-
-  background:
-
-  linear-gradient(
-    150deg,
-    #252525,
-    #080808
-  );
-
-
-  box-shadow:
-
-  0 15px 40px rgba(0,0,0,.6);
-
-
-  display:flex;
-
-  flex-direction:column;
-
-  align-items:center;
-
-  justify-content:center;
-
-
-  text-decoration:none;
-
-  color:white;
-
-
-  scroll-snap-align:center;
-
-
-  transition:.2s;
-
-
-}
-
-
-
-.game-card:active{
-
-  transform:scale(.97);
-
-}
-
-
-
-.game-icon{
-
-  font-size:4rem;
-
-  margin-bottom:25px;
-
-}
-
-
-
-.game-name{
-
-
-  font-family:
-  'Kaisei Decol',
-  serif;
-
-
-  font-size:1.5rem;
-
-  letter-spacing:.08em;
-
-
-}
-
-
-
-.game-type{
-
-
-  margin-top:10px;
-
-  color:#888;
-
-  font-size:.75rem;
-
-  letter-spacing:.15em;
-
-
-}
-
-
-
-/* dots */
-
-
-.dots{
-
-
-  text-align:center;
-
-  margin-top:12px;
-
-
-}
-
-
-
-.dot{
-
-  display:inline-block;
-
-  width:6px;
-
-  height:6px;
-
-  margin:0 4px;
-
-  background:#555;
-
-  border-radius:50%;
-
-
-}
-
-
-
-.dot.active{
-
-  background:white;
-
-  transform:scale(1.4);
-
-}
-
-
-
-
-/* ----------------
- tools
----------------- */
-
-
-.tools{
-
-
-  width:100%;
-
-
-}
-
-
-
-.tools-title{
-
-
-  text-align:center;
-
-
-  font-size:.65rem;
-
-  color:#777;
-
-  letter-spacing:.35em;
-
-
-}
-
-
-
-.tool-buttons{
-
-
-  display:flex;
-
-  justify-content:center;
-
-  gap:15px;
-
-  margin-top:12px;
-
-
-}
-
-
-
-.tool-toggle{
-
-
-  width:58px;
-
-  height:58px;
-
-
-  display:flex;
-
-  align-items:center;
-
-  justify-content:center;
-
-
-  font-size:1.5rem;
-
-
-  border:
-
-  1px solid var(--line);
-
-
-  border-radius:10px;
-
-
-  background:
-
-  rgba(255,255,255,.03);
-
-
-}
-
-
-
-
-.tool-toggle.active{
-
-
-  background:white;
-
-  color:black;
-
-
-}
-
-
-
-
-
-/* panels */
-
-
-.tool-panel{
-
-
-  display:none;
-
-
-  margin-top:15px;
-
-
-  padding:15px;
-
-
-  background:#151515;
-
-
-  border:
-
-  1px solid var(--line);
-
-
-  border-radius:10px;
-
-
-}
-
-
-
-.tool-panel.open{
-
-  display:flex;
-
-  flex-direction:column;
-
-  align-items:center;
-
-  gap:15px;
-
-}
-
-
-
-
-/* footer */
-
-
-footer{
-
-
-  text-align:center;
-
-  font-size:.6rem;
-
-  color:#666;
-
-  letter-spacing:.1em;
-
-
-}
-
-
-
-</style>
-</head>
-
-
-<body>
-
-
-<div class="app">
-
-
-<header>
-
-<h1>
-対戦ゲーム集
-</h1>
-
-<div class="sub">
-10 TWO-PLAYER GAMES
-</div>
-
-</header>
-
-
-
-
-<section class="game-area">
-
-
-<div class="slider-title">
-SWIPE TO PLAY
-</div>
-
-
-
-<div class="game-slider" id="gameSlider">
-
-
-
-<a class="game-card" href="mini_shogi.html">
-
-<div class="game-icon">♟</div>
-
-<div class="game-name">
-ミニ将棋
-</div>
-
-<div class="game-type">
-STRATEGY
-</div>
-
-</a>
-
-
-
-
-<a class="game-card" href="connect_four.html">
-
-<div class="game-icon">🔴</div>
-
-<div class="game-name">
-コネクトフォー
-</div>
-
-<div class="game-type">
-CLASSIC
-</div>
-
-</a>
-
-
-
-
-<a class="game-card" href="hit_and_blow.html">
-
-<div class="game-icon">🔢</div>
-
-<div class="game-name">
-ヒット＆ブロー
-</div>
-
-<div class="game-type">
-LOGIC
-</div>
-
-</a>
-
-
-
-
-<a class="game-card" href="gomoku.html">
-
-<div class="game-icon">⚫</div>
-
-<div class="game-name">
-五目並べ
-</div>
-
-<div class="game-type">
-BOARD GAME
-</div>
-
-</a>
-
-
-
-
-<a class="game-card" href="blackjack.html">
-
-<div class="game-icon">🃏</div>
-
-<div class="game-name">
-ブラックジャック
-</div>
-
-<div class="game-type">
-CARD GAME
-</div>
-
-</a>
-
-
-
-
-<a class="game-card" href="counting_duel.html">
-
-<div class="game-icon">🧱</div>
-
-<div class="game-name">
-積み木カウント
-</div>
-
-<div class="game-type">
-PUZZLE
-</div>
-
-</a>
-
-
-
-
-<a class="game-card" href="dice21.html">
-
-<div class="game-icon">🎲</div>
-
-<div class="game-name">
-ダイス21
-</div>
-
-<div class="game-type">
-LUCK GAME
-</div>
-
-</a>
-
-
-
-
-<a class="game-card" href="doubt_game.html">
-
-<div class="game-icon">🃏</div>
-
-<div class="game-name">
-ダウト
-</div>
-
-<div class="game-type">
-BLUFF
-</div>
-
-</a>
-
-
-
-
-<a class="game-card" href="dots_and_boxes.html">
-
-<div class="game-icon">▦</div>
-
-<div class="game-name">
-ドット＆ボックス
-</div>
-
-<div class="game-type">
-TACTICS
-</div>
-
-</a>
-
-
-
-
-<a class="game-card" href="werewolf2.html">
-
-<div class="game-icon">🐺</div>
-
-<div class="game-name">
-2人人狼
-</div>
-
-<div class="game-type">
-MIND GAME
-</div>
-
-</a>
-
-
-
-</div>
-
-
-
-<div class="dots" id="dots"></div>
-
-
-
-</section>
-
-
-
-
-<section class="tools">
-
-
-<div class="tools-title">
-TOOLS
-</div>
-
-
-<div class="tool-buttons">
-
-
-<div class="tool-toggle" id="diceToggle">
-🎲
-</div>
-
-
-<div class="tool-toggle" id="coinToggle">
-🪙
-</div>
-
-
-</div>
-
-
-<div class="tool-panel" id="dicePanel">
-
-<div>
-サイコロ
-</div>
-
-<button id="diceRollBtn">
-振る
-</button>
-
-<div id="diceResult"></div>
-
-</div>
-
-
-
-<div class="tool-panel" id="coinPanel">
-
-<div>
-コイン
-</div>
-
-<button id="coinFlipBtn">
-投げる
-</button>
-
-<div id="coinResult"></div>
-
-
-</div>
-
-
-</section>
-
-
-
-<footer>
-
-Swipe → Select Game
-
-</footer>
-
-<script>
-
-
-/* ==========================
-   game slider dots
-========================== */
-
-
-const slider = document.getElementById("gameSlider");
-const cards = document.querySelectorAll(".game-card");
-const dots = document.getElementById("dots");
-
-
-
-cards.forEach((card,index)=>{
-
-  const dot=document.createElement("span");
-
-  dot.className="dot";
-
-  if(index===0){
-    dot.classList.add("active");
-  }
-
-  dots.appendChild(dot);
-
-});
-
-
-
-const dotItems=document.querySelectorAll(".dot");
-
-
-
-slider.addEventListener("scroll",()=>{
-
-
-  const width=cards[0].offsetWidth + 18;
-
-
-  const index=Math.round(
-    slider.scrollLeft / width
-  );
-
-
-  dotItems.forEach((dot,i)=>{
-
-    dot.classList.toggle(
-      "active",
-      i===index
-    );
-
-  });
-
-
-});
-
-
-
-
-
-/* ==========================
-   tool toggle
-========================== */
-
-
-const diceToggle=
-document.getElementById("diceToggle");
-
-
-const coinToggle=
-document.getElementById("coinToggle");
-
-
-const dicePanel=
-document.getElementById("dicePanel");
-
-
-const coinPanel=
-document.getElementById("coinPanel");
-
-
-
-diceToggle.onclick=()=>{
-
-
-  const open=
-  dicePanel.classList.contains("open");
-
-
-  dicePanel.classList.toggle(
-    "open",
-    !open
-  );
-
-
-  coinPanel.classList.remove("open");
-
-
-  diceToggle.classList.toggle(
-    "active",
-    !open
-  );
-
-
-  coinToggle.classList.remove("active");
-
-
-};
-
-
-
-coinToggle.onclick=()=>{
-
-
-  const open=
-  coinPanel.classList.contains("open");
-
-
-  coinPanel.classList.toggle(
-    "open",
-    !open
-  );
-
-
-  dicePanel.classList.remove("open");
-
-
-  coinToggle.classList.toggle(
-    "active",
-    !open
-  );
-
-
-  diceToggle.classList.remove("active");
-
-
-};
-
-
-
-
-
-/* ==========================
-   dice
-========================== */
-
-
-const diceBtn=
-document.getElementById("diceRollBtn");
-
-
-const diceResult=
-document.getElementById("diceResult");
-
-
-
-diceBtn.onclick=()=>{
-
-
-  diceBtn.disabled=true;
-
-
-  let count=0;
-
-
-  const timer=setInterval(()=>{
-
-
-    const num=
-    Math.floor(Math.random()*6)+1;
-
-
-    diceResult.textContent=
-    "🎲 "+num;
-
-
-    count++;
-
-
-    if(count>12){
-
-      clearInterval(timer);
-
-      diceBtn.disabled=false;
-
-    }
-
-
-  },80);
-
-
-
-};
-
-
-
-
-
-
-/* ==========================
-   coin
-========================== */
-
-
-const coinBtn=
-document.getElementById("coinFlipBtn");
-
-
-const coinResult=
-document.getElementById("coinResult");
-
-
-
-coinBtn.onclick=()=>{
-
-
-  coinBtn.disabled=true;
-
-
-  coinResult.textContent=
-  "投げています...";
-
-
-
-  setTimeout(()=>{
-
-
-    const result=
-    Math.random()<0.5
-    ?"表"
-    :"裏";
-
-
-
-    coinResult.textContent=
-    "🪙 "+result;
-
-
-    coinBtn.disabled=false;
-
-
-  },800);
-
-
-
-};
-
-
-
-</script>
-
-
-
-</body>
-
-</html>
     --silver: #cfcfcf;
     --silver-dim: #6f6f6f;
   }
@@ -1136,6 +98,141 @@ coinBtn.onclick=()=>{
     letter-spacing:0.06em;
     text-align:center;
   }
+
+  /* --- bonus tools --- */
+  .extras{
+    width:100%;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .extras-heading{
+    font-size:0.62rem;
+    letter-spacing:0.3em;
+    color: var(--silver-dim);
+    text-transform:uppercase;
+    text-align:center;
+    margin-bottom: 2px;
+  }
+  .icon-toggle-row{
+    display:flex;
+    gap:12px;
+    justify-content:center;
+  }
+  .tool-toggle{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    width: 56px;
+    height: 56px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--hairline);
+    border-radius: 6px;
+    font-size:1.4rem;
+    cursor:pointer;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  .tool-toggle:hover{ background: rgba(255,255,255,0.07); border-color: var(--silver-dim); }
+  .tool-toggle.open{ background:#fff; border-color:#fff; }
+
+  .tool-panel{
+    width:100%;
+    background: linear-gradient(160deg, #202020, #141414 45%, #030303);
+    border: 1px solid var(--hairline);
+    border-radius: 4px;
+    padding: 20px 18px;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+  }
+  .tool-panel.open{ display:flex; }
+
+  .count-row{ display:flex; gap:8px; }
+  .count-btn{
+    width:36px; height:36px;
+    border-radius:50%;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--silver-dim);
+    color: var(--silver);
+    font-family:'Jost', sans-serif;
+    font-weight:600;
+    font-size:0.85rem;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .count-btn.active{ background:#fff; color:#141414; border-color:#fff; }
+
+  .dice-row{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; min-height:58px; }
+  .die{
+    width: 52px; height: 52px;
+    background: linear-gradient(180deg, #ffffff, #cfc9b8);
+    border-radius: 9px;
+    box-shadow: 0 3px 0 rgba(0,0,0,0.35), 0 6px 10px rgba(0,0,0,0.45), inset 0 2px 2px rgba(255,255,255,0.8);
+    display:grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    padding: 7px;
+  }
+  .die.rolling{ animation: tumble 0.5s ease; }
+  @keyframes tumble{
+    0%{ transform: rotate(0deg) scale(1); }
+    30%{ transform: rotate(120deg) scale(1.08); }
+    60%{ transform: rotate(240deg) scale(0.94); }
+    100%{ transform: rotate(360deg) scale(1); }
+  }
+  .pip{ width:7px; height:7px; border-radius:50%; background:#17130c; justify-self:center; align-self:center; opacity:0; }
+  .pip.on{ opacity:1; }
+
+  .dice-sum{ font-family:'Jost', sans-serif; font-size:0.78rem; color: var(--silver-dim); }
+  .dice-sum b{ color:#fff; font-size:1rem; }
+
+  .coin-wrap{ perspective: 600px; }
+  .coin{
+    width:84px; height:84px;
+    border-radius:50%;
+    position:relative;
+    transform-style: preserve-3d;
+    transition: transform 1s cubic-bezier(.2,.8,.3,1);
+  }
+  .coin-face{
+    position:absolute; inset:0;
+    border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:1.1rem;
+    backface-visibility: hidden;
+  }
+  .coin-face.heads{
+    background: linear-gradient(180deg, #ffffff, #cfc9b8);
+    color:#141414;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.35), 0 8px 14px rgba(0,0,0,0.45), inset 0 2px 2px rgba(255,255,255,0.8);
+  }
+  .coin-face.tails{
+    background: linear-gradient(180deg, #4a4a4a, #000000);
+    color:#f2efe6;
+    transform: rotateY(180deg);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.5), 0 8px 14px rgba(0,0,0,0.5), inset 0 0 0 1px #6f6f6f;
+  }
+
+  .coin-result{ font-size:0.8rem; color:#fff; letter-spacing:0.06em; min-height:1.2em; }
+
+  .tool-btn{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.78rem;
+    letter-spacing:0.1em;
+    color:#fff;
+    background: transparent;
+    border: 1px solid var(--silver-dim);
+    border-radius:2px;
+    padding: 11px 26px;
+    cursor:pointer;
+    transition: background .15s ease, border-color .15s ease;
+  }
+  .tool-btn:hover{ background: rgba(255,255,255,0.06); border-color:#fff; }
+  .tool-btn:active{ transform: translateY(1px); }
 </style>
 </head>
 <body>
@@ -1158,8 +255,147 @@ coinBtn.onclick=()=>{
     <a class="item" href="werewolf2.html"><span class="num">10</span><span class="title">2人人狼</span><span class="arrow">→</span></a>
   </nav>
 
+  <div class="extras">
+    <div class="extras-heading">おまけ機能</div>
+
+    <div class="icon-toggle-row">
+      <div class="tool-toggle" id="diceToggle" title="サイコロを振る">🎲</div>
+      <div class="tool-toggle" id="coinToggle" title="コイントスする">🪙</div>
+    </div>
+
+    <div class="tool-panel" id="dicePanel">
+      <div class="count-row" id="diceCountRow"></div>
+      <div class="dice-row" id="diceRow"></div>
+      <div class="dice-sum" id="diceSum"></div>
+      <button class="tool-btn" id="diceRollBtn">振る</button>
+    </div>
+
+    <div class="tool-panel" id="coinPanel">
+      <div class="coin-wrap">
+        <div class="coin" id="coin">
+          <div class="coin-face heads">表</div>
+          <div class="coin-face tails">裏</div>
+        </div>
+      </div>
+      <div class="coin-result" id="coinResult">投げてみましょう</div>
+      <button class="tool-btn" id="coinFlipBtn">投げる</button>
+    </div>
+  </div>
+
   <footer>index.html と10個のゲームファイルを同じフォルダに入れてお使いください</footer>
 
 </div>
+
+<script>
+(function(){
+  const PIP_PATTERNS = {
+    1: [5], 2: [1,9], 3: [1,5,9], 4: [1,3,7,9], 5: [1,3,5,7,9], 6: [1,3,4,6,7,9],
+  };
+
+  function setupToggle(toggleId, panelId, otherToggleId, otherPanelId){
+    const toggle = document.getElementById(toggleId);
+    const panel = document.getElementById(panelId);
+    const otherToggle = document.getElementById(otherToggleId);
+    const otherPanel = document.getElementById(otherPanelId);
+    toggle.addEventListener('click', () => {
+      const willOpen = !panel.classList.contains('open');
+      panel.classList.toggle('open', willOpen);
+      toggle.classList.toggle('open', willOpen);
+      if(willOpen){
+        otherPanel.classList.remove('open');
+        otherToggle.classList.remove('open');
+      }
+    });
+  }
+  setupToggle('diceToggle', 'dicePanel', 'coinToggle', 'coinPanel');
+  setupToggle('coinToggle', 'coinPanel', 'diceToggle', 'dicePanel');
+
+  // --- dice roller ---
+  let diceCount = 2;
+  let diceRolling = false;
+
+  function renderDiceCountButtons(){
+    const row = document.getElementById('diceCountRow');
+    row.innerHTML = '';
+    for(let n=1; n<=5; n++){
+      const btn = document.createElement('button');
+      btn.className = 'count-btn' + (n === diceCount ? ' active' : '');
+      btn.textContent = n;
+      btn.addEventListener('click', () => {
+        diceCount = n;
+        renderDiceCountButtons();
+        renderDiceFaces(Array(diceCount).fill(0));
+      });
+      row.appendChild(btn);
+    }
+  }
+
+  function renderDiceFaces(values){
+    const row = document.getElementById('diceRow');
+    row.innerHTML = '';
+    values.forEach(v => {
+      const die = document.createElement('div');
+      die.className = 'die';
+      for(let i=1;i<=9;i++){
+        const p = document.createElement('div');
+        p.className = 'pip';
+        if((PIP_PATTERNS[v] || []).includes(i)) p.classList.add('on');
+        die.appendChild(p);
+      }
+      row.appendChild(die);
+    });
+    const sumEl = document.getElementById('diceSum');
+    const total = values.reduce((a,b) => a+b, 0);
+    sumEl.innerHTML = values.some(v => v > 0) ? ('合計 <b>' + total + '</b>') : '';
+  }
+
+  document.getElementById('diceRollBtn').addEventListener('click', () => {
+    if(diceRolling) return;
+    diceRolling = true;
+    document.getElementById('diceRollBtn').disabled = true;
+
+    let flickers = 0;
+    const iv = setInterval(() => {
+      const randomValues = Array.from({length:diceCount}, () => Math.floor(Math.random()*6)+1);
+      renderDiceFaces(randomValues);
+      document.querySelectorAll('#diceRow .die').forEach(d => {
+        d.classList.remove('rolling'); void d.offsetWidth; d.classList.add('rolling');
+      });
+      flickers++;
+      if(flickers > 5){
+        clearInterval(iv);
+        diceRolling = false;
+        document.getElementById('diceRollBtn').disabled = false;
+      }
+    }, 90);
+  });
+
+  renderDiceCountButtons();
+  renderDiceFaces(Array(diceCount).fill(0));
+
+  // --- coin flip ---
+  let coinFlipping = false;
+  let coinRotation = 0;
+
+  document.getElementById('coinFlipBtn').addEventListener('click', () => {
+    if(coinFlipping) return;
+    coinFlipping = true;
+    document.getElementById('coinFlipBtn').disabled = true;
+    document.getElementById('coinResult').textContent = '';
+
+    const isHeads = Math.random() < 0.5;
+    const extraSpins = 4;
+    coinRotation += extraSpins * 360 + (isHeads ? 0 : 180);
+    const coin = document.getElementById('coin');
+    coin.style.transform = 'rotateY(' + coinRotation + 'deg)';
+
+    setTimeout(() => {
+      document.getElementById('coinResult').textContent = isHeads ? '表が出ました' : '裏が出ました';
+      coinFlipping = false;
+      document.getElementById('coinFlipBtn').disabled = false;
+    }, 1000);
+  });
+})();
+</script>
 </body>
 </html>
