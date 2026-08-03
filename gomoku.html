@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>五目並べ — 15×15 連珠盤</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap');
@@ -27,16 +27,45 @@
 
   *{ box-sizing:border-box; }
 
+  html{ height:100%; overflow:hidden; touch-action: manipulation; }
+
+  .home-btn{
+    position: fixed;
+    top: 14px;
+    left: 14px;
+    z-index: 100;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    color: #fff;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 3px;
+    padding: 7px 12px;
+    text-decoration:none;
+    backdrop-filter: blur(4px);
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .home-btn:hover{ background: rgba(255,255,255,0.24); color:#fff; border-color:#fff; }
+
   body{
     margin:0;
-    min-height:100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
     background:
       radial-gradient(ellipse at 50% -10%, #1c1c1c 0%, #0a0a0a 55%, #000000 100%);
     font-family:'Zen Kaku Gothic New', sans-serif;
     color: var(--silver);
     display:flex;
     justify-content:center;
-    padding: 18px 12px 40px;
+    align-items:flex-start;
+    padding: max(6px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(6px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
   }
 
   .app{
@@ -45,14 +74,14 @@
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:14px;
+    gap:8px;
   }
 
-  header{ text-align:center; margin-top:2px; }
+  header{ text-align:center; margin-top:0; }
   h1{
     font-family:'Kaisei Decol', serif;
     font-weight:700;
-    font-size: clamp(1.5rem, 6vw, 1.9rem);
+    font-size: clamp(1.2rem, 5.5vw, 1.6rem);
     letter-spacing: 0.06em;
     margin:0;
     color:#fff;
@@ -60,22 +89,38 @@
   }
   h1 .small{
     display:block;
-    font-size:0.58rem;
-    letter-spacing:0.4em;
+    font-size:0.54rem;
+    letter-spacing:0.36em;
     font-weight:500;
     color:var(--silver-dim);
-    margin-top:8px;
+    margin-top:4px;
     text-transform: uppercase;
   }
+
+  .mode-toggle-row{ display:flex; gap:8px; }
+  .mode-toggle-btn{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.66rem;
+    letter-spacing:0.06em;
+    color: var(--silver);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--silver-dim);
+    border-radius:3px;
+    padding: 6px 12px;
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .mode-toggle-btn.active{ background:#fff; color:#141414; border-color:#fff; }
 
   .turn-wrap{
     display:flex;
     align-items:center;
-    gap:12px;
-    min-height:44px;
+    gap:10px;
+    min-height:34px;
     border-top: 1px solid var(--hairline);
     border-bottom: 1px solid var(--hairline);
-    padding: 10px 22px;
+    padding: 5px 18px;
   }
   .turn-stone{
     width:30px; height:30px;
@@ -100,7 +145,7 @@
   .status-text{ font-size:0.7rem; color:var(--silver-dim); letter-spacing:0.06em; margin-top:2px; }
 
   .board-frame{
-    padding: 16px;
+    padding: 10px;
     background: linear-gradient(160deg, var(--frame-hi), var(--frame-mid) 45%, var(--frame-low));
     border-radius: 6px;
     box-shadow:
@@ -114,8 +159,8 @@
     display:grid;
     grid-template-columns: repeat(15, 1fr);
     grid-template-rows: repeat(15, 1fr);
-    width: min(430px, 86vw);
-    height: min(430px, 86vw);
+    width: min(380px, 78vw);
+    height: min(380px, 78vw);
     background: var(--board-bg);
     border-radius: 3px;
     box-shadow: inset 0 0 0 1px rgba(0,0,0,0.6);
@@ -189,7 +234,7 @@
     50%{ box-shadow: 0 0 12px 5px rgba(255,255,255,0.65); }
   }
 
-  .controls{ display:flex; gap:12px; margin-top:2px; }
+  .controls{ display:flex; gap:12px; margin-top:0; }
   button.main-btn{
     font-family:'Zen Kaku Gothic New', sans-serif;
     font-weight:700;
@@ -261,11 +306,18 @@
 </style>
 </head>
 <body>
+<a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
 <div class="app">
 
   <header>
     <h1>五目並べ<span class="small">Gomoku · 15 × 15</span></h1>
   </header>
+
+  <div class="mode-toggle-row" id="modeToggleRow">
+    <button class="mode-toggle-btn active" id="modeTwoPlayerBtn">2人対戦</button>
+    <button class="mode-toggle-btn" id="modeCPUBtn">CPU対戦</button>
+    <button class="mode-toggle-btn" id="modeCPUMasterBtn">達人CPU</button>
+  </div>
 
   <div class="turn-wrap">
     <div id="turnStone" class="turn-stone white"></div>
@@ -291,6 +343,7 @@
       <li>縦・横・斜め、いずれかの向きで5つ以上石を並べたら勝利です</li>
       <li>一度置いた石は動かせません</li>
       <li>全マスが埋まって誰も揃わなければ引き分けです</li>
+      <li>「CPU対戦」を選ぶと黒をCPUが担当します。1人でも遊べます</li>
     </ul>
   </div>
 
@@ -309,6 +362,122 @@
   const SIZE = 15;
   const STAR_POINTS = [[3,3],[3,11],[7,7],[11,3],[11,11]];
   let grid, turn, gameOver, filledCount;
+  let vsCPU = false;
+  let cpuDifficulty = 'normal';
+  const CPU_SIDE = 'black';
+  const DIRS4 = [[0,1],[1,0],[1,1],[1,-1]];
+
+  function cpuSide(){ return vsCPU ? CPU_SIDE : null; }
+
+  function wouldWin(r, c, player){
+    grid[r][c] = player;
+    const result = checkWin(r, c, player);
+    grid[r][c] = null;
+    return !!result;
+  }
+
+  function generateCandidates(){
+    const seen = new Set();
+    const list = [];
+    let anyStone = false;
+    for(let r=0;r<SIZE;r++){
+      for(let c=0;c<SIZE;c++){
+        if(!grid[r][c]) continue;
+        anyStone = true;
+        for(let dr=-2; dr<=2; dr++){
+          for(let dc=-2; dc<=2; dc++){
+            const nr=r+dr, nc=c+dc;
+            if(nr<0||nr>=SIZE||nc<0||nc>=SIZE) continue;
+            if(grid[nr][nc]) continue;
+            const key = nr+'_'+nc;
+            if(!seen.has(key)){ seen.add(key); list.push([nr,nc]); }
+          }
+        }
+      }
+    }
+    if(!anyStone){
+      const mid = Math.floor(SIZE/2);
+      return [[mid, mid]];
+    }
+    return list;
+  }
+
+  function evaluateDirectionScore(r, c, dr, dc, player){
+    let nr = r+dr, nc = c+dc, fwd = 0;
+    while(nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && grid[nr][nc] === player){ fwd++; nr+=dr; nc+=dc; }
+    const fwdOpen = nr>=0 && nr<SIZE && nc>=0 && nc<SIZE && grid[nr][nc] === null;
+
+    let pr = r-dr, pc = c-dc, back = 0;
+    while(pr>=0 && pr<SIZE && pc>=0 && pc<SIZE && grid[pr][pc] === player){ back++; pr-=dr; pc-=dc; }
+    const backOpen = pr>=0 && pr<SIZE && pc>=0 && pc<SIZE && grid[pr][pc] === null;
+
+    const count = 1 + fwd + back;
+    const openEnds = (fwdOpen?1:0) + (backOpen?1:0);
+
+    if(count >= 5) return 1000000;
+    if(count === 4) return openEnds === 2 ? 500000 : (openEnds === 1 ? 10000 : 0);
+    if(count === 3) return openEnds === 2 ? 5000 : (openEnds === 1 ? 200 : 0);
+    if(count === 2) return openEnds === 2 ? 100 : (openEnds === 1 ? 15 : 0);
+    return openEnds === 2 ? 5 : 1;
+  }
+
+  function evaluatePlacement(r, c, player){
+    let total = 0;
+    for(const [dr,dc] of DIRS4){ total += evaluateDirectionScore(r, c, dr, dc, player); }
+    return total;
+  }
+
+  function scoreMove(r, c){
+    const offense = evaluatePlacement(r, c, CPU_SIDE);
+    const defense = evaluatePlacement(r, c, 'white');
+    return offense + defense * 0.9;
+  }
+
+  function cpuChooseMove(){
+    const candidates = generateCandidates();
+
+    for(const [r,c] of candidates){
+      if(wouldWin(r, c, CPU_SIDE)) return [r,c];
+    }
+    for(const [r,c] of candidates){
+      if(wouldWin(r, c, 'white')) return [r,c];
+    }
+
+    const scored = candidates.map(([r,c]) => ({ r, c, score: scoreMove(r,c) }));
+    scored.sort((a,b) => b.score - a.score);
+
+    if(cpuDifficulty !== 'master' || scored.length <= 1){
+      return [scored[0].r, scored[0].c];
+    }
+
+    const topN = scored.slice(0, Math.min(8, scored.length));
+    let best = topN[0], bestNet = -Infinity;
+    for(const cand of topN){
+      grid[cand.r][cand.c] = CPU_SIDE;
+      const oppCandidates = generateCandidates();
+      let oppBest = 0;
+      for(const [r2,c2] of oppCandidates){
+        const s = scoreMove2(r2, c2);
+        if(s > oppBest) oppBest = s;
+      }
+      grid[cand.r][cand.c] = null;
+      const net = cand.score - oppBest * 0.5;
+      if(net > bestNet){ bestNet = net; best = cand; }
+    }
+    return [best.r, best.c];
+  }
+
+  function scoreMove2(r, c){
+    const offense = evaluatePlacement(r, c, 'white');
+    const defense = evaluatePlacement(r, c, CPU_SIDE);
+    return offense + defense * 0.9;
+  }
+
+  function cpuTakeTurn(){
+    if(gameOver || !vsCPU || turn !== CPU_SIDE) return;
+    const [r,c] = cpuChooseMove();
+    placeStone(r,c);
+  }
 
   function resetAll(){
     grid = Array.from({length:SIZE}, () => Array(SIZE).fill(null));
@@ -335,7 +504,10 @@
         const hoverDot = document.createElement('div');
         hoverDot.className = 'hover-dot';
         point.appendChild(hoverDot);
-        point.addEventListener('click', () => placeStone(r,c));
+        point.addEventListener('click', () => {
+          if(vsCPU && turn === CPU_SIDE) return;
+          placeStone(r,c);
+        });
         boardEl.appendChild(point);
       }
     }
@@ -347,7 +519,18 @@
     stone.className = 'turn-stone ' + turn + (pulse ? ' pulse' : '');
     if(pulse){ void stone.offsetWidth; stone.classList.add('pulse'); }
     label.textContent = (turn === 'white' ? '白' : '黒') + ' の番';
-    document.getElementById('statusText').textContent = gameOver ? '対局終了' : 'マスを選んで石を置いてください';
+    const isCpuTurn = vsCPU && turn === CPU_SIDE;
+    if(gameOver){
+      document.getElementById('statusText').textContent = '対局終了';
+    } else if(isCpuTurn){
+      document.getElementById('statusText').textContent = (cpuDifficulty === 'master' ? '達人CPU' : 'CPU') + 'が考え中…';
+    } else {
+      document.getElementById('statusText').textContent = 'マスを選んで石を置いてください';
+    }
+
+    if(!gameOver && isCpuTurn){
+      setTimeout(cpuTakeTurn, 500);
+    }
   }
 
   function placeStone(r,c){
@@ -421,6 +604,19 @@
     }
     overlay.classList.add('show');
   }
+
+  function setMode(newVsCPU, newDifficulty){
+    if(vsCPU === newVsCPU && cpuDifficulty === newDifficulty) return;
+    vsCPU = newVsCPU;
+    cpuDifficulty = newDifficulty;
+    document.getElementById('modeTwoPlayerBtn').classList.toggle('active', !vsCPU);
+    document.getElementById('modeCPUBtn').classList.toggle('active', vsCPU && cpuDifficulty === 'normal');
+    document.getElementById('modeCPUMasterBtn').classList.toggle('active', vsCPU && cpuDifficulty === 'master');
+    resetAll();
+  }
+  document.getElementById('modeTwoPlayerBtn').addEventListener('click', () => setMode(false, 'normal'));
+  document.getElementById('modeCPUBtn').addEventListener('click', () => setMode(true, 'normal'));
+  document.getElementById('modeCPUMasterBtn').addEventListener('click', () => setMode(true, 'master'));
 
   document.getElementById('newGameBtn').addEventListener('click', resetAll);
   document.getElementById('againBtn').addEventListener('click', resetAll);
