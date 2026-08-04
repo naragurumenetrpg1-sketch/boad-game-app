@@ -62,13 +62,20 @@
     text-transform: uppercase;
   }
 
-  .game-grid{
+.game-grid{
     width:100%;
-    display:grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
+    display:flex;
+    overflow-x:auto;
+    gap:12px;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+}
+
+.game-grid::-webkit-scrollbar{
+    display:none;
+}
   .game-card{
+    flex:0 0 100%;
     position:relative;
     display:flex;
     flex-direction:column;
@@ -298,6 +305,7 @@
   </header>
 
   <nav class="game-grid">
+    <div class="game-page">
     <a class="game-card" href="mini_shogi.html">
       <div><div class="num">01</div><div class="title">ミニ将棋</div></div>
       <div class="tags"><span class="tag">2人</span><span class="tag cpu">CPU</span><span class="tag master">達人</span></div>
@@ -322,6 +330,9 @@
       <div><div class="num">06</div><div class="title">積み木カウント</div></div>
       <div class="tags"><span class="tag">2人</span></div>
     </a>
+    </div>
+
+<div class="game-page">
     <a class="game-card" href="dice21.html">
       <div><div class="num">07</div><div class="title">ダイス21</div></div>
       <div class="tags"><span class="tag">2人</span><span class="tag cpu">CPU</span></div>
@@ -338,6 +349,8 @@
       <div><div class="num">10</div><div class="title">2人人狼</div></div>
       <div class="tags"><span class="tag">2人</span></div>
     </a>
+  </div>
+</nav>
   </nav>
 
   <div class="extras">
