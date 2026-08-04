@@ -34,13 +34,13 @@
   }
 
   .app{
-    width:100%;
-    max-width: 460px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:28px;
-  }
+  width:100%;
+  max-width: 460px;
+  display:none;   /* ← flex から none に変更 */
+  flex-direction:column;
+  align-items:center;
+  gap:28px;
+}
 
   header{ text-align:center; }
   h1{
@@ -461,6 +461,20 @@
       coinFlipping = false;
       document.getElementById('coinFlipBtn').disabled = false;
     }, 1000);
+});
+    const opening = document.getElementById("opening");
+  const openingVideo = document.getElementById("openingVideo");
+  const app = document.querySelector(".app");
+
+  openingVideo.addEventListener("ended", () => {
+    opening.style.display = "none";
+    app.style.display = "flex";
+  });
+
+  opening.addEventListener("click", () => {
+    openingVideo.pause();
+    opening.style.display = "none";
+    app.style.display = "flex";
   });
 })();
 </script>
