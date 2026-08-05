@@ -386,12 +386,12 @@
   position:fixed;
 
   top:0;
-  right:-0%;
+  right:-80%;
 
   width:80%;
   height:100%;
 
-  background:rgba(10,10,10,0.85);
+  background:rgba(10,10,10,0.65);
 
   backdrop-filter:blur(12px);
 
@@ -402,7 +402,6 @@
   transition:0.35s ease;
 
 }
-
 
 .setting-panel.open{
 
@@ -443,8 +442,20 @@
     hitotoki-対戦ゲーム集-
   </h1>
 </header>
-  
-  </div>
+
+<div class="setting-panel" id="settingPanel">
+
+  <button class="close-btn" id="closeBtn">
+    ×
+  </button>
+
+  <h2>設定</h2>
+
+  <button id="bgChangeBtn">
+    背景変更
+  </button>
+
+</div>
   
   <nav class="game-grid" id="gameGrid">
     <div class="game-page">
@@ -686,6 +697,7 @@
 // 設定パネル
 
 const settingBtn = document.getElementById("settingBtn");
+  const closeBtn = document.getElementById("closeBtn");
 const settingPanel = document.getElementById("settingPanel");
 
 
@@ -694,6 +706,11 @@ settingBtn.addEventListener("click",()=>{
   settingPanel.classList.toggle("open");
 
 });
+closeBtn.addEventListener("click",()=>{
+
+  settingPanel.classList.remove("open");
+
+});  
 })();
 </script>
 </body>
