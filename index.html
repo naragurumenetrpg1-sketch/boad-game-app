@@ -54,6 +54,7 @@
     font-size: clamp(1.5rem, 6vw, 1.9rem);
     letter-spacing: 0.08em;
     margin:0;
+    margin-top:15px;
     color:#fff;
     text-shadow: 0 2px 10px rgba(255,255,255,0.12);
   }
@@ -366,10 +367,36 @@
 
  <header>
   <button class="setting-btn" id="settingBtn">☰</button>
+header{
+  position:relative;
+  width:100%;
+  text-align:center;
+}
 
+
+#setting-btn{
+  position:absolute;
+
+  right:0;
+  top:0;
+
+  width:42px;
+  height:42px;
+
+  background:rgba(255,255,255,0.05);
+
+  border:1px solid var(--hairline);
+
+  border-radius:8px;
+
+  color:#fff;
+
+  font-size:1.4rem;
+
+  cursor:pointer;
+}
   <h1>
     hitotoki-対戦ゲーム集-
-    <span class="small">10 Two-Player Games</span>
   </h1>
 </header>
 
