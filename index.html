@@ -680,10 +680,20 @@
   const startScreen = document.getElementById("startScreen");
   const app = document.querySelector(".app");
 
-  function showStartScreen(){
-    opening.style.display = "none";
-    startScreen.style.display = "flex";
-  }
+  if(sessionStorage.getItem("hitotokiStarted")){
+
+  opening.style.display = "none";
+  startScreen.style.display = "none";
+  app.style.display = "flex";
+
+}
+  
+ function showStartScreen(){
+  sessionStorage.setItem("hitotokiStarted", "true");
+
+  opening.style.display = "none";
+  startScreen.style.display = "flex";
+}
 
   openingVideo.addEventListener("ended", showStartScreen);
 
