@@ -63,6 +63,53 @@
   }
   .home-btn:hover{ background: rgba(255,255,255,0.24); color:#fff; border-color:#fff; }
 
+  .bg-switch-btn{
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 100;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.7rem;
+    letter-spacing:0.06em;
+    color: #fff;
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.4);
+    border-radius: 3px;
+    padding: 7px 12px;
+    cursor:pointer;
+    backdrop-filter: blur(4px);
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .bg-switch-btn:hover{ background: rgba(255,255,255,0.24); border-color:#fff; }
+
+  .bg-switch-panel{
+    position: fixed;
+    top: 52px;
+    right: 14px;
+    z-index: 100;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding: 8px 10px;
+    background: rgba(20,20,20,0.9);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  }
+  .bg-swatch{
+    width:22px; height:22px;
+    border-radius:50%;
+    background: var(--sw, #0a0a0a);
+    border: 1px solid rgba(255,255,255,0.35);
+    cursor:pointer;
+    padding:0;
+    transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
+  }
+  .bg-swatch:hover{ transform: scale(1.12); border-color:#fff; }
+  .bg-swatch.active{ border-color:#fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.35); }
+
   body{
     margin:0;
     height: 100dvh;
@@ -73,7 +120,13 @@
     -webkit-user-select: none;
     user-select: none;
     background:
-      radial-gradient(ellipse at 50% -10%, #1c1c1c 0%, #0a0a0a 55%, #000000 100%);
+  radial-gradient(
+    ellipse at 50% -10%,
+    #1c1c1c 0%,
+    #0a0a0a 55%,
+    #000000 100%
+  );
+    transition: background-color 0.4s ease;
     font-family:'Zen Kaku Gothic New', sans-serif;
     color: var(--paper);
     display:flex;
@@ -198,7 +251,7 @@
     display:grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 4px;
-    width: min(340px, 78vw);
+    width: min(430px, 90vw);
     margin-bottom: 6px;
   }
   .col-btn{
@@ -223,8 +276,8 @@
     display:grid;
     grid-template-columns: repeat(7, 1fr);
     grid-template-rows: repeat(6, 1fr);
-    width: min(340px, 78vw);
-    height: calc(min(340px, 78vw) * 6 / 7);
+    width: min(430px, 90vw);
+    height: calc(min(430px, 90vw) * 6 / 7);
     background: radial-gradient(120% 100% at 50% 30%, #0b0b0b 0%, #030303 75%);
     border-radius: 2px;
     box-shadow: inset 0 4px 14px rgba(0,0,0,0.85), inset 0 0 0 1px var(--void-rim);
@@ -234,6 +287,7 @@
   .cell{
     position:relative;
     display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
   }
   .hole{
     width:78%; height:78%;
@@ -367,7 +421,69 @@
   }
 
   .mode-toggle-row{ display:flex; gap:8px; }
-  #modeToggleRow{ margin-top: 16px; }
+  #modeToggleRow{
+    flex-direction: column;
+    width:100%;
+  }
+  #modeToggleRow .mode-toggle-btn{
+    width:100%;
+    padding: 12px 16px;
+    font-size:0.78rem;
+  }
+  .mode-toggle-subrow{
+    display:flex;
+    gap:8px;
+    width:100%;
+  }
+  .mode-toggle-subrow .mode-toggle-btn{
+    width:auto;
+    flex:1;
+  }
+
+  /* --- setup screen (mode selection) --- */
+  .setup-screen{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    width:100%;
+  }
+  .setup-card{
+    width:100%;
+    max-width: 380px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--hairline);
+    border-radius: 8px;
+    padding: 26px 22px;
+  }
+  .setup-title{
+    font-family:'Kaisei Decol', serif;
+    font-weight:500;
+    font-size:0.95rem;
+    letter-spacing:0.1em;
+    color:#fff;
+  }
+  .start-btn{
+    width:100%;
+    padding: 12px 16px;
+    font-size:0.8rem;
+    background:#fff;
+    color:#141414;
+    border-color:#fff;
+  }
+  .start-btn:hover{ background:#eee; border-color:#eee; }
+
+  /* --- game screen --- */
+  .game-screen{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:10px;
+    width:100%;
+  }
   .mode-toggle-btn{
     font-family:'Zen Kaku Gothic New', sans-serif;
     font-weight:700;
@@ -451,69 +567,94 @@
 </head>
 <body>
 <a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
+<button id="bgSwitchBtn" class="bg-switch-btn" aria-label="背景色を変更">背景</button>
+<div id="bgSwitchPanel" class="bg-switch-panel hidden">
+  <button
+  class="bg-swatch active"
+  data-grad="#1c1c1c 0%, #0a0a0a 55%, #000000 100%"
+  style="--sw:#0a0a0a"
+  aria-label="クラシック"
+></button>
+  <button class="bg-swatch" data-grad="#4a4a4a 0%, #3a3a3a 55%, #262626 100%" style="--sw:#3c3c3c" aria-label="ホワイトグレー"></button>
+  <button class="bg-swatch" data-grad="#3a4238 0%, #2c332c 55%, #1c211c 100%" style="--sw:#2c332c" aria-label="グリーングレー"></button>
+  <button class="bg-swatch" data-grad="#3d2a2e 0%, #2f2024 55%, #1f1519 100%" style="--sw:#33262a" aria-label="ワインレッドグレー"></button>
+  <button class="bg-swatch" data-grad="#232323 0%, #181818 55%, #0d0d0d 100%" style="--sw:#161616" aria-label="ブラックグレー"></button>
+</div>
 <div class="app">
 
   <header>
     <h1>コネクトフォー<span class="small">Connect Four · 7 × 6 Gravity</span></h1>
   </header>
 
-  <div class="turn-wrap">
-    <div id="turnChip" class="turn-chip white"></div>
-    <div>
-      <div id="turnLabel" class="turn-label">白 の番</div>
-      <div id="statusText" class="status-text">列を選んでコインを落としてください</div>
+  <div id="setupScreen" class="setup-screen">
+    <div class="setup-card">
+      <div class="setup-title">対戦モードを選ぶ</div>
+      <div class="mode-toggle-row" id="modeToggleRow">
+        <button class="mode-toggle-btn active" id="modeTwoPlayerBtn">2人対戦</button>
+        <div class="mode-toggle-subrow">
+          <button class="mode-toggle-btn" id="modeCPUBtn">CPU対戦</button>
+          <button class="mode-toggle-btn" id="modeCPUMasterBtn">達人CPU</button>
+        </div>
+      </div>
+      <div class="mode-toggle-row hidden" id="sideToggleRow">
+        <button class="mode-toggle-btn active" id="sideWhiteBtn">先行で対戦</button>
+        <button class="mode-toggle-btn" id="sideBlackBtn">後攻で対戦</button>
+      </div>
+      <button id="startGameBtn" class="main-btn start-btn">はじめる</button>
     </div>
   </div>
 
-  <div class="score-row">
-    <div class="score-pill"><span class="dot white"></span>白 <b id="whiteScore">0</b></div>
-    <div class="score-pill"><span class="dot black"></span>黒 <b id="blackScore">0</b></div>
-  </div>
+  <div id="gameScreen" class="game-screen hidden">
 
-  <div id="resultBanner" class="result-banner hidden">
-    <div>
-      <div class="result-text" id="winnerText">白の勝ち！</div>
-      <div class="result-sub" id="winnerSub">4つ並びました</div>
-    </div>
-    <button id="againBtn" class="main-btn">次の対局へ</button>
-  </div>
-
-  <div class="board-perspective">
-    <div class="board-frame">
-      <div id="colButtons" class="col-buttons"></div>
-      <div class="board-stage">
-        <div id="board" class="board"></div>
-        <div id="chipLayer" class="chip-layer"></div>
-        <div id="previewPointer" class="preview-pointer"></div>
+    <div class="turn-wrap">
+      <div id="turnChip" class="turn-chip white"></div>
+      <div>
+        <div id="turnLabel" class="turn-label">白 の番</div>
+        <div id="statusText" class="status-text">列を選んでコインを落としてください</div>
       </div>
     </div>
-  </div>
 
-  <div class="mode-toggle-row" id="modeToggleRow">
-    <button class="mode-toggle-btn active" id="modeTwoPlayerBtn">2人対戦</button>
-    <button class="mode-toggle-btn" id="modeCPUBtn">CPU対戦</button>
-    <button class="mode-toggle-btn" id="modeCPUMasterBtn">達人CPU</button>
-  </div>
+    <div class="score-row">
+      <div class="score-pill"><span class="dot white"></span>白 <b id="whiteScore">0</b></div>
+      <div class="score-pill"><span class="dot black"></span>黒 <b id="blackScore">0</b></div>
+    </div>
 
-  <div class="mode-toggle-row hidden" id="sideToggleRow">
-    <button class="mode-toggle-btn active" id="sideWhiteBtn">先行で対戦</button>
-    <button class="mode-toggle-btn" id="sideBlackBtn">後攻で対戦</button>
-  </div>
+    <div id="resultBanner" class="result-banner hidden">
+      <div>
+        <div class="result-text" id="winnerText">白の勝ち！</div>
+        <div class="result-sub" id="winnerSub">4つ並びました</div>
+      </div>
+      <button id="againBtn" class="main-btn">次の対局へ</button>
+    </div>
 
-  <div class="controls">
-    <button id="newGameBtn" class="main-btn">はじめから</button>
-    <button id="rulesBtn" class="main-btn">遊び方</button>
-  </div>
+    <div class="board-perspective">
+      <div class="board-frame">
+        <div id="colButtons" class="col-buttons"></div>
+        <div class="board-stage">
+          <div id="board" class="board"></div>
+          <div id="chipLayer" class="chip-layer"></div>
+          <div id="previewPointer" class="preview-pointer"></div>
+        </div>
+      </div>
+    </div>
 
-  <div id="rules" class="rules">
-    <h2>遊び方</h2>
-    <ul>
-      <li>7列×6段の盤に、交互にコインを落とします</li>
-      <li>コインは列の一番下の空きマスまで重力で落ちます</li>
-      <li>縦・横・斜め、どちらの向きでも4つ並べたら勝利です</li>
-      <li>全マスが埋まって誰も揃わなければ引き分けです</li>
-      <li>スコアは「はじめから」を押すまで対局をまたいで記録されます</li>
-    </ul>
+    <div class="controls">
+      <button id="newGameBtn" class="main-btn">はじめから</button>
+      <button id="rulesBtn" class="main-btn">遊び方</button>
+      <button id="changeModeBtn" class="main-btn">モード変更</button>
+    </div>
+
+    <div id="rules" class="rules">
+      <h2>遊び方</h2>
+      <ul>
+        <li>7列×6段の盤に、交互にコインを落とします</li>
+        <li>コインは列の一番下の空きマスまで重力で落ちます</li>
+        <li>縦・横・斜め、どちらの向きでも4つ並べたら勝利です</li>
+        <li>全マスが埋まって誰も揃わなければ引き分けです</li>
+        <li>スコアは「はじめから」を押すまで対局をまたいで記録されます</li>
+      </ul>
+    </div>
+
   </div>
 
 </div>
@@ -641,7 +782,7 @@
 
   function cpuChooseColumn(){
     const aiPlayer = cpuSide();
-    const CPU_DEPTH = cpuDifficulty === 'master' ? 5 : 4;
+    const CPU_DEPTH = cpuDifficulty === 'master' ? 5 : 3;
     const validCols = getValidCols(colHeights);
     let bestCol = validCols[0];
     let bestScore = -Infinity;
@@ -706,6 +847,12 @@
         const hole = document.createElement('div');
         hole.className = 'hole';
         cell.appendChild(hole);
+        cell.addEventListener('click', () => {
+          if(vsCPU && turn === cpuSide()) return;
+          dropInColumn(c);
+        });
+        cell.addEventListener('pointerenter', () => showPreview(c));
+        cell.addEventListener('pointerleave', hidePreview);
         boardEl.appendChild(cell);
       }
     }
@@ -896,7 +1043,48 @@
     document.getElementById('rules').classList.toggle('open');
   });
 
-  resetAll();
+  document.getElementById('startGameBtn').addEventListener('click', () => {
+    document.getElementById('setupScreen').classList.add('hidden');
+    document.getElementById('gameScreen').classList.remove('hidden');
+    resetAll();
+  });
+  document.getElementById('changeModeBtn').addEventListener('click', () => {
+    document.getElementById('gameScreen').classList.add('hidden');
+    document.getElementById('setupScreen').classList.remove('hidden');
+  });
+
+  // --- user-selectable background color switch ---
+  (function(){
+    const btn = document.getElementById('bgSwitchBtn');
+    const panel = document.getElementById('bgSwitchPanel');
+    const swatches = document.querySelectorAll('.bg-swatch[data-grad]');
+
+    const NOISE_LAYER = "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0.33 0.33 0.33 0 0 0 0 0 0 0.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\") repeat";
+
+function applyBg(gradStops){
+  document.body.style.background =
+    'radial-gradient(ellipse at 50% -10%, ' + gradStops + ')';
+}
+
+    btn.addEventListener('click', () => {
+      panel.classList.toggle('hidden');
+    });
+
+    swatches.forEach(sw => {
+      sw.addEventListener('click', () => {
+        applyBg(sw.getAttribute('data-grad'));
+        swatches.forEach(s => s.classList.remove('active'));
+        sw.classList.add('active');
+        panel.classList.add('hidden');
+      });
+    });
+
+    document.addEventListener('click', (e) => {
+      if(!panel.classList.contains('hidden') && !panel.contains(e.target) && e.target !== btn){
+        panel.classList.add('hidden');
+      }
+    });
+  })();
 })();
 </script>
 </body>
