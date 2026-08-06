@@ -245,6 +245,7 @@
       inset 0 -12px 20px rgba(0,0,0,0.6);
     transform: rotateX(5deg);
     transform-origin: 50% 100%;
+    touch-action: none;
   }
 
   .col-buttons{
@@ -848,12 +849,6 @@
         const hole = document.createElement('div');
         hole.className = 'hole';
         cell.appendChild(hole);
-        cell.addEventListener('click', () => {
-          if(vsCPU && turn === cpuSide()) return;
-          dropInColumn(c);
-        });
-        cell.addEventListener('pointerenter', () => showPreview(c));
-        cell.addEventListener('pointerleave', hidePreview);
         boardEl.appendChild(cell);
       }
     }
@@ -867,9 +862,6 @@
       btn.className = 'col-btn';
       btn.textContent = '▼';
       btn.setAttribute('aria-label', (c+1) + '列目に落とす');
-      btn.addEventListener('click', () => dropInColumn(c));
-      btn.addEventListener('pointerenter', () => showPreview(c));
-      btn.addEventListener('pointerleave', hidePreview);
       wrap.appendChild(btn);
     }
   }
@@ -881,7 +873,7 @@
     });
   }
 
-  // --- column hover preview: drop pointer ---
+  // --- column position preview: drop pointer ---
   function showPreview(col){
     if(gameOver || colHeights[col] >= ROWS || (vsCPU && turn === cpuSide())) return;
     const preview = document.getElementById('previewPointer');
@@ -1053,6 +1045,51 @@
     document.getElementById('gameScreen').classList.add('hidden');
     document.getElementById('setupScreen').classList.remove('hidden');
   });
+
+  // --- drag-to-drop: press anywhere on the board frame, slide to a column, release to drop ---
+  (function(){
+    const boardFrame = document.querySelector('.board-frame');
+    const boardEl = document.getElementById('board');
+    let dragging = false;
+    let dragPointerId = null;
+
+    function canDropNow(){
+      return !gameOver && !(vsCPU && turn === cpuSide());
+    }
+
+    function colFromClientX(clientX){
+      const rect = boardEl.getBoundingClientRect();
+      const x = clientX - rect.left;
+      const ratio = Math.min(0.999, Math.max(0, x / rect.width));
+      return Math.floor(ratio * COLS);
+    }
+
+    boardFrame.addEventListener('pointerdown', (e) => {
+      if(!canDropNow()) return;
+      dragging = true;
+      dragPointerId = e.pointerId;
+      try{ boardFrame.setPointerCapture(e.pointerId); }catch(err){}
+      showPreview(colFromClientX(e.clientX));
+    });
+
+    boardFrame.addEventListener('pointermove', (e) => {
+      if(!dragging || e.pointerId !== dragPointerId) return;
+      if(!canDropNow()){ hidePreview(); return; }
+      showPreview(colFromClientX(e.clientX));
+    });
+
+    function finishDrag(e){
+      if(!dragging || e.pointerId !== dragPointerId) return;
+      dragging = false;
+      hidePreview();
+      if(canDropNow()){
+        const col = colFromClientX(e.clientX);
+        if(colHeights[col] < ROWS) dropInColumn(col);
+      }
+    }
+    boardFrame.addEventListener('pointerup', finishDrag);
+    boardFrame.addEventListener('pointercancel', () => { dragging = false; hidePreview(); });
+  })();
 
   // --- user-selectable background color switch ---
   (function(){
