@@ -174,6 +174,14 @@
     border-bottom: 1px solid var(--hairline);
     padding: 6px 20px;
   }
+  .turn-info{ min-width:0; }
+  .again-inline{
+    margin-left:auto;
+    flex-shrink:0;
+    padding: 7px 12px;
+    font-size:0.66rem;
+    white-space:nowrap;
+  }
   .turn-chip{
     width:32px; height:32px;
     border-radius:50%;
@@ -233,6 +241,7 @@
     position:relative;
     padding: 16px 13px 20px;
     border-radius: 9px;
+    overflow:hidden;
     background:
       url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.026 0.006' numOctaves='6' seed='11' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.34 0.34 0.34 0 0 0.34 0.34 0.34 0 0 0.34 0.34 0.34 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E") no-repeat,
       radial-gradient(150% 130% at 28% -12%, var(--wood-light) 0%, var(--wood-mid) 46%, var(--wood-deep) 100%);
@@ -307,6 +316,7 @@
     grid-template-columns: repeat(7, 1fr);
     grid-template-rows: repeat(6, 1fr);
     pointer-events:none;
+    clip-path: inset(0px 0px -80px 0px);
   }
   .chip{
     position:relative;
@@ -386,6 +396,16 @@
     50%{ box-shadow: 0 0 14px 6px rgba(255,255,255,0.65), 0 0 32px 12px rgba(255,255,255,0.35); }
   }
   .chip.dim{ opacity:0.35; filter: grayscale(0.35); transition: opacity .45s ease, filter .45s ease; }
+
+  .chip.fall-out{
+    animation: chipFallOut 0.62s cubic-bezier(.45,0,.85,1) both !important;
+  }
+  @keyframes chipFallOut{
+    0%{ transform: translateY(0); opacity:1; }
+    30%{ transform: translateY(8%); opacity:1; }
+    80%{ transform: translateY(650%); opacity:1; }
+    100%{ transform: translateY(900%); opacity:1; }
+  }
 
   /* landing impact ring */
   .impact-ring{
@@ -606,29 +626,7 @@
   }
   .confirm-ok:hover{ background:#eee; border-color:#eee; }
 
-  .result-banner{
-    width:100%;
-    max-width: 380px;
-    background: linear-gradient(160deg, #202020, #141414 45%, #030303);
-    border: 1px solid var(--hairline);
-    border-radius: 6px;
-    padding: 10px 14px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-  }
-  .result-banner.hidden{ display:none; }
-  .result-text{
-    font-family:'Kaisei Decol', serif;
-    font-weight:700;
-    font-size:0.95rem;
-    color:#fff;
-    display:flex; align-items:center; gap:8px;
-    letter-spacing:0.03em;
-  }
-  .result-sub{ font-size:0.66rem; color:var(--silver-dim); margin-top:2px; letter-spacing:0.03em; }
+  .controls .main-btn.hidden{ display:none; }
 </style>
 </head>
 <body>
@@ -674,23 +672,16 @@
 
     <div class="turn-wrap">
       <div id="turnChip" class="turn-chip white"></div>
-      <div>
+      <div class="turn-info">
         <div id="turnLabel" class="turn-label">白 の番</div>
         <div id="statusText" class="status-text">列を選んでコインを落としてください</div>
       </div>
+      <button id="againBtn" class="main-btn again-inline hidden">次の対局へ</button>
     </div>
 
     <div class="score-row">
       <div class="score-pill"><span class="dot white"></span>白 <b id="whiteScore">0</b></div>
       <div class="score-pill"><span class="dot black"></span>黒 <b id="blackScore">0</b></div>
-    </div>
-
-    <div id="resultBanner" class="result-banner hidden">
-      <div>
-        <div class="result-text" id="winnerText">白の勝ち！</div>
-        <div class="result-sub" id="winnerSub">4つ並びました</div>
-      </div>
-      <button id="againBtn" class="main-btn">次の対局へ</button>
     </div>
 
     <div class="board-perspective">
@@ -742,6 +733,8 @@
 (function(){
   const COLS = 7, ROWS = 6;
   let grid, turn, gameOver, colHeights, score;
+  let lastResult = null; // { winner: 'white'|'black'|null, draw: boolean } | null
+  let dropCooldownUntil = 0; // 2人対戦時のみ、直前の一手からの誤連打を防ぐ
   let vsCPU = false;
   let cpuDifficulty = 'normal';
   let humanSide = 'white';
@@ -895,8 +888,9 @@
     turn = 'white';
     gameOver = false;
     cpuMovesMade = 0;
+    lastResult = null;
+    dropCooldownUntil = 0;
     document.getElementById('chipLayer').innerHTML = '';
-    document.getElementById('resultBanner').classList.add('hidden');
     hidePreview();
     renderBoardHoles();
     renderColButtons();
@@ -908,6 +902,25 @@
       updateColButtonsState();
       setTimeout(cpuTakeTurn, 1500);
     }
+  }
+
+  // 対局終了後、盤上のコインを下へ落として消してから次の対局へ移る
+  function resetBoardWithFall(){
+    const chipLayer = document.getElementById('chipLayer');
+    const chips = Array.from(chipLayer.querySelectorAll('.chip'));
+    if(chips.length === 0){
+      resetBoard();
+      return;
+    }
+    chips.forEach(el => {
+      const col = parseInt(el.style.gridColumnStart, 10) - 1;
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.classList.add('fall-out');
+      el.style.animationDelay = (Math.max(0, col) * 0.045) + 's';
+    });
+    const totalMs = (0.62 + (COLS - 1) * 0.045) * 1000 + 40;
+    setTimeout(resetBoard, totalMs);
   }
 
   function resetAll(){
@@ -964,10 +977,27 @@
   function updateTurnUI(pulse){
     const chip = document.getElementById('turnChip');
     const label = document.getElementById('turnLabel');
-    chip.className = 'turn-chip ' + turn + (pulse ? ' pulse' : '');
-    if(pulse){ void chip.offsetWidth; chip.classList.add('pulse'); }
-    label.textContent = (turn === 'white' ? '白' : '黒') + ' の番';
-    document.getElementById('statusText').textContent = gameOver ? '対局終了' : '列を選んでコインを落としてください';
+    const statusText = document.getElementById('statusText');
+    const againBtn = document.getElementById('againBtn');
+
+    if(gameOver && lastResult){
+      if(lastResult.draw){
+        label.textContent = '引き分け';
+        statusText.textContent = '盤面が埋まりました';
+      } else {
+        chip.className = 'turn-chip ' + lastResult.winner + (pulse ? ' pulse' : '');
+        if(pulse){ void chip.offsetWidth; chip.classList.add('pulse'); }
+        label.textContent = (lastResult.winner === 'white' ? '白' : '黒') + 'の勝ち！';
+        statusText.textContent = '4つ並びました';
+      }
+      againBtn.classList.remove('hidden');
+    } else {
+      chip.className = 'turn-chip ' + turn + (pulse ? ' pulse' : '');
+      if(pulse){ void chip.offsetWidth; chip.classList.add('pulse'); }
+      label.textContent = (turn === 'white' ? '白' : '黒') + ' の番';
+      statusText.textContent = '列を選んでコインを落としてください';
+      againBtn.classList.add('hidden');
+    }
     updateColButtonsState();
     hidePreview();
   }
@@ -991,6 +1021,7 @@
     if(gameOver) return;
     if(colHeights[c] >= ROWS) return;
     hidePreview();
+    if(!vsCPU) dropCooldownUntil = Date.now() + 700;
     const r = ROWS - 1 - colHeights[c];
     grid[r][c] = turn;
     colHeights[c]++;
@@ -1063,18 +1094,7 @@
   }
 
   function showWinner(winner, draw){
-    const banner = document.getElementById('resultBanner');
-    const text = document.getElementById('winnerText');
-    const sub = document.getElementById('winnerSub');
-    if(draw){
-      text.textContent = '引き分け';
-      sub.textContent = '盤面が埋まりました';
-    } else {
-      const dotColor = winner === 'white' ? 'var(--ivory-mid)' : 'var(--ebony-mid)';
-      text.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:' + dotColor + ';box-shadow:0 0 0 1px var(--silver-dim);flex-shrink:0;"></span>' + (winner === 'white' ? '白' : '黒') + 'の勝ち！';
-      sub.textContent = '4つ並びました';
-    }
-    banner.classList.remove('hidden');
+    lastResult = draw ? { winner: null, draw: true } : { winner: winner, draw: false };
   }
 
   function setMode(newVsCPU, newDifficulty){
@@ -1107,7 +1127,7 @@
     resetBoard();
   });
 
-  document.getElementById('againBtn').addEventListener('click', resetBoard);
+  document.getElementById('againBtn').addEventListener('click', resetBoardWithFall);
 
   // --- rules modal ---
   const rulesModal = document.getElementById('rulesModal');
@@ -1179,7 +1199,10 @@
     let dragPointerId = null;
 
     function canDropNow(){
-      return !gameOver && !(vsCPU && turn === cpuSide());
+      if(gameOver) return false;
+      if(vsCPU && turn === cpuSide()) return false;
+      if(!vsCPU && Date.now() < dropCooldownUntil) return false;
+      return true;
     }
 
     function colFromClientX(clientX){
