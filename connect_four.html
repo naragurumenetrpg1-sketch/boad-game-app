@@ -628,6 +628,98 @@
 
   .controls .main-btn.hidden{ display:none; }
 
+  /* --- 横画面専用：左右の「手番コイン」インジケーター ---
+     白は左、黒は右に固定表示。今の手番（決着後は勝った方）は
+     実物のコインのように塗って光らせ、そうでない方は輪郭だけにする。 */
+  .side-turn-slot{
+    display:none;
+    position:fixed;
+    top:50%;
+    transform: translateY(-50%);
+    width: 15vh;
+    height: 15vh;
+    max-width:110px;
+    max-height:110px;
+    min-width:56px;
+    min-height:56px;
+    border-radius:50%;
+    z-index:60;
+    transition: box-shadow .25s ease, background .25s ease, border-color .25s ease;
+  }
+  .side-turn-slot.left{ left: max(3vw, 14px); }
+  .side-turn-slot.right{ right: max(3vw, 14px); }
+
+  .side-turn-slot.inactive{
+    background: transparent;
+    border: 3px solid rgba(255,255,255,0.25);
+    box-shadow:none;
+    animation:none;
+  }
+
+  .side-turn-slot.active.white{
+    border:none;
+    background: radial-gradient(circle at 34% 30%, #f2eee2 0%, #e8e3d3 40%, #d3cdbc 74%, #b3ae9f 100%);
+    box-shadow:
+      0 0 10px 3px rgba(255,255,255,0.4),
+      0 0 30px 10px rgba(255,255,255,0.22),
+      inset 0 3px 5px rgba(255,255,255,0.5),
+      inset 0 -6px 9px rgba(110,102,84,0.32);
+    animation: sideTurnGlow 1.4s ease-in-out infinite;
+  }
+  .side-turn-slot.active.black{
+    border: none;
+    background: radial-gradient(circle at 34% 30%, #3c3c3c 0%, #242424 40%, #141414 74%, #060606 100%);
+    box-shadow:
+      0 0 10px 3px rgba(255,255,255,0.2),
+      0 0 30px 10px rgba(255,255,255,0.1),
+      inset 0 0 0 1px rgba(150,150,160,0.4),
+      inset 0 3px 5px rgba(255,255,255,0.09);
+    animation: sideTurnGlow 1.4s ease-in-out infinite;
+  }
+  @keyframes sideTurnGlow{
+    0%,100%{ transform: translateY(-50%) scale(1); }
+    50%{ transform: translateY(-50%) scale(1.07); }
+  }
+
+  /* --- 横画面専用：対局終了後のタップ検知オーバーレイ ---
+     終了直後は透明のまま画面全体のタップだけを拾い、タップされたら
+     中央に「次の対局へ」ボタンをポップ表示する。ボタン以外の場所を
+     タップするとポップを閉じ、勝敗時の盤面がそのまま見える状態に戻る。 */
+  .landscape-end-overlay{
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:250;
+    align-items:center;
+    justify-content:center;
+    background: transparent;
+    transition: background .2s ease;
+  }
+  .landscape-end-overlay.show-popup{
+    background: rgba(0,0,0,0.55);
+  }
+  .landscape-next-btn{
+    opacity:0;
+    transform: scale(0.9);
+    pointer-events:none;
+    transition: opacity .18s ease, transform .18s ease;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.82rem;
+    letter-spacing:0.08em;
+    color:#141414;
+    background:#fff;
+    border:1px solid #fff;
+    border-radius:4px;
+    padding: 14px 30px;
+    cursor:pointer;
+  }
+  .landscape-end-overlay.show-popup .landscape-next-btn{
+    opacity:1;
+    transform: scale(1);
+    pointer-events:auto;
+  }
+
   /* ============================================================
      横画面（スマホを横向きに持った時）向けレイアウト
      画面の高さが小さい横向き状態を対象にし、タイトル・ホーム/背景ボタン・
@@ -649,25 +741,12 @@
     }
     .app{ gap:6px; }
 
-    /* 手番表示は基本的に非表示。ただし対局終了時は「次の対局へ」ボタンだけ
-       細いバーとして再表示し、次の対局へ進めなくならないようにする。 */
+    /* 手番表示（帯）は左右のコインに置き換わるので非表示 */
     .turn-wrap{
       display:none;
       border:none;
       padding:0;
       min-height:0;
-    }
-    .turn-wrap:has(#againBtn:not(.hidden)){
-      display:flex;
-      justify-content:center;
-      padding: 3px 0 1px;
-    }
-    .turn-wrap:has(#againBtn:not(.hidden)) .turn-chip,
-    .turn-wrap:has(#againBtn:not(.hidden)) .turn-info{
-      display:none;
-    }
-    .turn-wrap:has(#againBtn:not(.hidden)) .again-inline{
-      margin-left:0;
     }
 
     .score-row{
@@ -691,6 +770,9 @@
 
     /* モード選択画面（対局開始前）も横向きなら少しコンパクトに */
     .setup-card{ margin-top:4px; padding:16px 18px; gap:10px; }
+
+    .side-turn-slot{ display:block; }
+    .landscape-end-overlay.active{ display:flex; }
   }
 </style>
 </head>
@@ -764,6 +846,15 @@
       <button id="newGameBtn" class="main-btn">はじめから</button>
       <button id="rulesBtn" class="main-btn">遊び方</button>
       <button id="changeModeBtn" class="main-btn">モード変更</button>
+    </div>
+
+    <!-- 横画面専用：左右の手番コイン（白=左／黒=右）。今の手番、決着後は勝った方を光らせる -->
+    <div id="sideTurnLeft" class="side-turn-slot left"></div>
+    <div id="sideTurnRight" class="side-turn-slot right"></div>
+
+    <!-- 横画面専用：対局終了後にタップで「次の対局へ」をポップ表示するオーバーレイ -->
+    <div id="landscapeEndOverlay" class="landscape-end-overlay">
+      <button id="landscapeNextBtn" class="landscape-next-btn">次の対局へ</button>
     </div>
 
   </div>
@@ -1056,15 +1147,48 @@
         statusText.textContent = '4つ並びました';
       }
       againBtn.classList.remove('hidden');
+      showLandscapeEndOverlay();
     } else {
       chip.className = 'turn-chip ' + turn + (pulse ? ' pulse' : '');
       if(pulse){ void chip.offsetWidth; chip.classList.add('pulse'); }
       label.textContent = (turn === 'white' ? '白' : '黒') + ' の番';
       statusText.textContent = '列を選んでコインを落としてください';
       againBtn.classList.add('hidden');
+      hideLandscapeEndOverlay();
     }
     updateColButtonsState();
+    updateSideTurnIndicators();
     hidePreview();
+  }
+
+  // --- 横画面用：左（白）／右（黒）の手番コイン表示 ---
+  function updateSideTurnIndicators(){
+    const left = document.getElementById('sideTurnLeft');
+    const right = document.getElementById('sideTurnRight');
+    if(!left || !right) return;
+
+    let highlightSide = null;
+    if(gameOver && lastResult && !lastResult.draw){
+      highlightSide = lastResult.winner;
+    } else if(!gameOver){
+      highlightSide = turn;
+    }
+
+    left.className = 'side-turn-slot left' + (highlightSide === 'white' ? ' active white' : ' inactive');
+    right.className = 'side-turn-slot right' + (highlightSide === 'black' ? ' active black' : ' inactive');
+  }
+
+  // --- 横画面用：対局終了後、タップで「次の対局へ」をポップ表示するオーバーレイ ---
+  function showLandscapeEndOverlay(){
+    const overlay = document.getElementById('landscapeEndOverlay');
+    if(!overlay) return;
+    overlay.classList.add('active');
+    overlay.classList.remove('show-popup');
+  }
+  function hideLandscapeEndOverlay(){
+    const overlay = document.getElementById('landscapeEndOverlay');
+    if(!overlay) return;
+    overlay.classList.remove('active', 'show-popup');
   }
 
   function updateScoreUI(){
@@ -1193,6 +1317,26 @@
   });
 
   document.getElementById('againBtn').addEventListener('click', resetBoardWithFall);
+
+  // --- 横画面用：終了オーバーレイのタップ挙動 ---
+  // ポップが出ていない状態でタップ → ポップを表示
+  // ポップが出ている状態で、ボタン以外をタップ → ポップを閉じて盤面を見せる
+  // ボタンをタップ → 次の対局へ
+  (function(){
+    const overlay = document.getElementById('landscapeEndOverlay');
+    const nextBtn = document.getElementById('landscapeNextBtn');
+
+    overlay.addEventListener('click', (e) => {
+      if(e.target === nextBtn) return;
+      overlay.classList.toggle('show-popup');
+    });
+
+    nextBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hideLandscapeEndOverlay();
+      resetBoardWithFall();
+    });
+  })();
 
   // --- rules modal ---
   const rulesModal = document.getElementById('rulesModal');
