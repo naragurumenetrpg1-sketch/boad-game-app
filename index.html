@@ -421,6 +421,48 @@
   font-size:1.5rem;
 
 }
+
+.setting-panel .close-btn{
+  position:absolute;
+  top:20px;
+  right:20px;
+  width:32px;
+  height:32px;
+  background:transparent;
+  border:1px solid var(--hairline);
+  border-radius:50%;
+  color:#fff;
+  font-size:1.1rem;
+  line-height:1;
+  cursor:pointer;
+}
+
+.setting-menu{
+  display:flex;
+  flex-direction:column;
+  margin-top:28px;
+  width:100%;
+}
+.setting-menu-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:16px 4px;
+  border-bottom:1px solid var(--hairline);
+  color:#fff;
+  text-decoration:none;
+  font-family:'Zen Kaku Gothic New', sans-serif;
+  font-size:0.82rem;
+  letter-spacing:0.04em;
+  transition: color .15s ease;
+}
+.setting-menu-item:hover{
+  color: var(--silver-dim);
+}
+.setting-menu-item .arrow{
+  color: var(--silver-dim);
+  font-size:0.9rem;
+}
   
 </style>
 </head>
@@ -453,9 +495,17 @@
 
   <h2>設定</h2>
 
-  <button id="bgChangeBtn">
-    背景変更
-  </button>
+  <div class="setting-menu">
+    <a class="setting-menu-item" href="privacy.html">
+      <span>プライバシーポリシー</span><span class="arrow">›</span>
+    </a>
+    <a class="setting-menu-item" href="terms.html">
+      <span>利用規約</span><span class="arrow">›</span>
+    </a>
+    <a class="setting-menu-item" href="contact.html">
+      <span>お問い合わせ</span><span class="arrow">›</span>
+    </a>
+  </div>
 
 </div>
   
