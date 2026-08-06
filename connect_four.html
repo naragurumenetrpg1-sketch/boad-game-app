@@ -627,6 +627,71 @@
   .confirm-ok:hover{ background:#eee; border-color:#eee; }
 
   .controls .main-btn.hidden{ display:none; }
+
+  /* ============================================================
+     横画面（スマホを横向きに持った時）向けレイアウト
+     画面の高さが小さい横向き状態を対象にし、タイトル・ホーム/背景ボタン・
+     手番表示をたたんで、盤面をできるだけ大きく見せる。
+     ============================================================ */
+  @media (orientation: landscape) and (max-height: 600px){
+
+    .home-btn,
+    .bg-switch-btn,
+    .bg-switch-panel{
+      display:none !important;
+    }
+
+    header{ display:none; }
+
+    body{
+      align-items:center;
+      padding: 4px;
+    }
+    .app{ gap:6px; }
+
+    /* 手番表示は基本的に非表示。ただし対局終了時は「次の対局へ」ボタンだけ
+       細いバーとして再表示し、次の対局へ進めなくならないようにする。 */
+    .turn-wrap{
+      display:none;
+      border:none;
+      padding:0;
+      min-height:0;
+    }
+    .turn-wrap:has(#againBtn:not(.hidden)){
+      display:flex;
+      justify-content:center;
+      padding: 3px 0 1px;
+    }
+    .turn-wrap:has(#againBtn:not(.hidden)) .turn-chip,
+    .turn-wrap:has(#againBtn:not(.hidden)) .turn-info{
+      display:none;
+    }
+    .turn-wrap:has(#againBtn:not(.hidden)) .again-inline{
+      margin-left:0;
+    }
+
+    .score-row{
+      font-size:0.6rem;
+      gap:14px;
+    }
+
+    /* 盤面は画面幅ではなく高さを基準にスケールさせ、横向きでも収まるようにする */
+    .board-perspective{ padding-bottom:6px; }
+    .col-buttons,
+    .board{
+      width: min(74vh, 92vw);
+    }
+    .board{ height: calc(min(74vh, 92vw) * 6 / 7); }
+
+    .controls{ margin-top:0; gap:8px; }
+    .controls .main-btn{
+      padding: 6px 11px;
+      font-size:0.6rem;
+    }
+
+    /* モード選択画面（対局開始前）も横向きなら少しコンパクトに */
+    .setup-card{ margin-top:4px; padding:16px 18px; gap:10px; }
+  }
 </style>
 </head>
 <body>
