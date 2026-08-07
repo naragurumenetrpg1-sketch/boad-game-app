@@ -629,27 +629,16 @@
   .controls .main-btn.hidden{ display:none; }
 
   /* --- 横画面専用：左右の「手番コイン」インジケーター ---
-     左＝白コイン、右＝黒コイン。色は固定で、自分の番のときは不透明、
-     相手の番のときは半透明にするだけ。影などの質感は付けない。
-     決着時のテキストはコインの中ではなく、上に枠付きラベルとして出す。 */
-  .side-turn-wrap{
+     左＝白コイン、右＝黒コイン。
+     白コインは自分の番＝不透明、相手の番＝半透明。
+     黒コインは常に黒のままにして、自分の番のときだけ白いフチが浮き出る。
+     決着時の文字はコインの上に絶対配置のラベルとして出すので、
+     ラベルの有無でコイン自体の位置がズレることはない。 */
+  .side-turn-coin{
     display:none;
     position:fixed;
     top:50%;
     transform: translateY(-50%);
-    flex-direction:column;
-    align-items:center;
-    gap:16px;
-    z-index:60;
-  }
-  .side-turn-wrap.left{
-    left: calc(max(7vw, 22px) + env(safe-area-inset-left, 0px));
-  }
-  .side-turn-wrap.right{
-    right: calc(max(7vw, 22px) + env(safe-area-inset-right, 0px));
-  }
-
-  .side-turn-coin{
     width: 15vh;
     height: 15vh;
     max-width:100px;
@@ -657,24 +646,39 @@
     min-width:52px;
     min-height:52px;
     border-radius:50%;
-    opacity:1;
-    transition: opacity .2s ease;
+    z-index:60;
+    box-sizing:border-box;
+    transition: opacity .2s ease, border-color .2s ease;
   }
-  .side-turn-wrap.dim .side-turn-coin{ opacity:0.5; }
+  .side-turn-coin.left{
+    left: calc(max(7vw, 22px) + env(safe-area-inset-left, 0px));
+    background:#f2efe6;
+    opacity:1;
+  }
+  .side-turn-coin.left.dim{ opacity:0.5; }
 
-  .side-turn-wrap.left .side-turn-coin{ background:#f2efe6; }
-  .side-turn-wrap.right .side-turn-coin{ background:#6f6f6f; }
+  .side-turn-coin.right{
+    right: calc(max(7vw, 22px) + env(safe-area-inset-right, 0px));
+    background:#141414;
+    border: 3px solid transparent;
+  }
+  .side-turn-coin.right:not(.dim){ border-color:#fff; }
 
   .side-turn-label{
     display:none;
+    position:absolute;
+    bottom: 100%;
+    left:50%;
+    transform: translateX(-50%);
+    margin-bottom: 16px;
     font-family:'Zen Kaku Gothic New', sans-serif;
     font-weight:700;
-    font-size: clamp(0.68rem, 2vh, 0.85rem);
+    font-size: clamp(0.64rem, 1.9vh, 0.8rem);
     letter-spacing:0.06em;
     color:#fff;
     border: 1.5px solid #fff;
     border-radius: 3px;
-    padding: 9px 16px;
+    padding: 8px 14px;
     white-space:nowrap;
     background: rgba(0,0,0,0.35);
   }
@@ -770,7 +774,7 @@
     /* モード選択画面（対局開始前）も横向きなら少しコンパクトに */
     .setup-card{ margin-top:4px; padding:16px 18px; gap:10px; }
 
-    .side-turn-wrap{ display:flex; }
+    .side-turn-coin{ display:block; }
     .landscape-end-overlay.active{ display:flex; }
   }
 </style>
@@ -847,14 +851,12 @@
       <button id="changeModeBtn" class="main-btn">モード変更</button>
     </div>
 
-    <!-- 横画面専用：左右の手番コイン（白=左／黒=右）。今の手番、決着後は勝った方を光らせる -->
-    <div id="sideTurnLeft" class="side-turn-wrap left">
+    <!-- 横画面専用：左右の手番コイン（白=左／黒=右）。今の手番、決着後は勝った方を強調表示 -->
+    <div id="sideTurnLeft" class="side-turn-coin left">
       <div class="side-turn-label" id="sideTurnLeftText"></div>
-      <div class="side-turn-coin"></div>
     </div>
-    <div id="sideTurnRight" class="side-turn-wrap right">
+    <div id="sideTurnRight" class="side-turn-coin right">
       <div class="side-turn-label" id="sideTurnRightText"></div>
-      <div class="side-turn-coin"></div>
     </div>
 
     <!-- 横画面専用：対局終了後にタップで「次の対局へ」をポップ表示するオーバーレイ -->
