@@ -629,8 +629,8 @@
   .controls .main-btn.hidden{ display:none; }
 
   /* --- 横画面専用：左右の「手番コイン」インジケーター ---
-     白は左、黒は右に固定表示。今の手番（決着後は勝った方）は
-     実物のコインのように塗って光らせ、そうでない方は輪郭だけにする。 */
+     左＝白側、右＝黒側で常に塗りつぶし表示。今の手番の側ははっきりした色、
+     そうでない側はグレーがかった色にして、光らせたりはしない。 */
   .side-turn-slot{
     display:none;
     position:fixed;
@@ -638,48 +638,33 @@
     transform: translateY(-50%);
     width: 15vh;
     height: 15vh;
-    max-width:110px;
-    max-height:110px;
-    min-width:56px;
-    min-height:56px;
+    max-width:100px;
+    max-height:100px;
+    min-width:52px;
+    min-height:52px;
     border-radius:50%;
     z-index:60;
-    transition: box-shadow .25s ease, background .25s ease, border-color .25s ease;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 2px 3px rgba(255,255,255,0.12), inset 0 -3px 5px rgba(0,0,0,0.35);
+    transition: background .2s ease;
   }
-  .side-turn-slot.left{ left: max(3vw, 14px); }
-  .side-turn-slot.right{ right: max(3vw, 14px); }
-
-  .side-turn-slot.inactive{
-    background: transparent;
-    border: 3px solid rgba(255,255,255,0.25);
-    box-shadow:none;
-    animation:none;
+  .side-turn-slot.left{
+    left: calc(max(7vw, 22px) + env(safe-area-inset-left, 0px));
+  }
+  .side-turn-slot.right{
+    right: calc(max(7vw, 22px) + env(safe-area-inset-right, 0px));
   }
 
-  .side-turn-slot.active.white{
-    border:none;
-    background: radial-gradient(circle at 34% 30%, #f2eee2 0%, #e8e3d3 40%, #d3cdbc 74%, #b3ae9f 100%);
-    box-shadow:
-      0 0 10px 3px rgba(255,255,255,0.4),
-      0 0 30px 10px rgba(255,255,255,0.22),
-      inset 0 3px 5px rgba(255,255,255,0.5),
-      inset 0 -6px 9px rgba(110,102,84,0.32);
-    animation: sideTurnGlow 1.4s ease-in-out infinite;
-  }
-  .side-turn-slot.active.black{
-    border: none;
-    background: radial-gradient(circle at 34% 30%, #3c3c3c 0%, #242424 40%, #141414 74%, #060606 100%);
-    box-shadow:
-      0 0 10px 3px rgba(255,255,255,0.2),
-      0 0 30px 10px rgba(255,255,255,0.1),
-      inset 0 0 0 1px rgba(150,150,160,0.4),
-      inset 0 3px 5px rgba(255,255,255,0.09);
-    animation: sideTurnGlow 1.4s ease-in-out infinite;
-  }
-  @keyframes sideTurnGlow{
-    0%,100%{ transform: translateY(-50%) scale(1); }
-    50%{ transform: translateY(-50%) scale(1.07); }
-  }
+  /* 白側スロット：白の番＝白、黒の番＝薄いグレー */
+  .side-turn-slot.left.on-white{ background:#f2efe6; }
+  .side-turn-slot.left.on-black{ background:#9a968a; }
+
+  /* 黒側スロット：白の番＝黒寄りのグレー、黒の番＝黒 */
+  .side-turn-slot.right.on-white{ background:#4a4a4a; }
+  .side-turn-slot.right.on-black{ background:#0c0c0c; }
+
+  /* 引き分け時など、どちらの手番でもない場合はそれぞれ控えめな色にしておく */
+  .side-turn-slot.left.on-draw{ background:#9a968a; }
+  .side-turn-slot.right.on-draw{ background:#4a4a4a; }
 
   /* --- 横画面専用：対局終了後のタップ検知オーバーレイ ---
      終了直後は透明のまま画面全体のタップだけを拾い、タップされたら
@@ -1174,8 +1159,8 @@
       highlightSide = turn;
     }
 
-    left.className = 'side-turn-slot left' + (highlightSide === 'white' ? ' active white' : ' inactive');
-    right.className = 'side-turn-slot right' + (highlightSide === 'black' ? ' active black' : ' inactive');
+    left.className = 'side-turn-slot left' + (highlightSide === 'white' ? ' on-white' : highlightSide === 'black' ? ' on-black' : ' on-draw');
+    right.className = 'side-turn-slot right' + (highlightSide === 'black' ? ' on-black' : highlightSide === 'white' ? ' on-white' : ' on-draw');
   }
 
   // --- 横画面用：対局終了後、タップで「次の対局へ」をポップ表示するオーバーレイ ---
