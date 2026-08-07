@@ -96,6 +96,15 @@
     padding: 2px 4px;
   }
 
+  /* 横画面では1ページ4枚（横1列）表示に切り替え */
+  @media (orientation: landscape) and (max-height: 600px){
+    .game-page{
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: 92px;
+      gap: 8px;
+    }
+  }
+
   .game-card{
     position:relative;
     display:flex;
@@ -145,6 +154,7 @@
   .game-card .tag.cpu{ color:#dcd6c0; border-color: rgba(220,214,192,0.35); }
   .game-card .tag.master{ color:#fff; border-color: rgba(255,255,255,0.5); }
 
+  /* ページ位置を示すインジケーター（丸ではなく細いバー） */
   /* ページ位置を示すドット */
   .page-dots{
     display:flex;
@@ -510,53 +520,7 @@
 
 </div>
   
-  <nav class="game-grid" id="gameGrid">
-    <div class="game-page">
-      <a class="game-card" href="mini_shogi.html">
-        <div><div class="num">01</div><div class="title">ミニ将棋</div></div>
-        <div class="tags"><span class="tag">2人</span><span class="tag cpu">CPU</span><span class="tag master">達人</span></div>
-      </a>
-      <a class="game-card" href="connect_four.html">
-        <div><div class="num">02</div><div class="title">コネクトフォー</div></div>
-        <div class="tags"><span class="tag">2人</span><span class="tag cpu">CPU</span><span class="tag master">達人</span></div>
-      </a>
-      <a class="game-card" href="hit_and_blow.html">
-        <div><div class="num">03</div><div class="title">ヒット＆ブロー</div></div>
-        <div class="tags"><span class="tag">2人</span><span class="tag cpu">CPU</span><span class="tag master">達人</span></div>
-      </a>
-      <a class="game-card" href="gomoku.html">
-        <div><div class="num">04</div><div class="title">五目並べ</div></div>
-        <div class="tags"><span class="tag">2人</span><span class="tag cpu">CPU</span><span class="tag master">達人</span></div>
-      </a>
-      <a class="game-card" href="blackjack.html">
-        <div><div class="num">05</div><div class="title">ブラックジャック</div></div>
-        <div class="tags"><span class="tag cpu">ディーラー戦</span></div>
-      </a>
-      <a class="game-card" href="counting_duel.html">
-        <div><div class="num">06</div><div class="title">積み木カウント</div></div>
-        <div class="tags"><span class="tag">2人</span></div>
-      </a>
-    </div>
-
-    <div class="game-page">
-      <a class="game-card" href="dice21.html">
-        <div><div class="num">07</div><div class="title">ダイス21</div></div>
-        <div class="tags"><span class="tag">2人</span><span class="tag cpu">CPU</span></div>
-      </a>
-      <a class="game-card" href="doubt_game.html">
-        <div><div class="num">08</div><div class="title">ダウト</div></div>
-        <div class="tags"><span class="tag">2人</span><span class="tag cpu">CPU</span></div>
-      </a>
-      <a class="game-card" href="dots_and_boxes.html">
-        <div><div class="num">09</div><div class="title">ドット＆ボックス</div></div>
-        <div class="tags"><span class="tag">2人</span></div>
-      </a>
-      <a class="game-card" href="werewolf2.html">
-        <div><div class="num">10</div><div class="title">2人人狼</div></div>
-        <div class="tags"><span class="tag">2人</span></div>
-      </a>
-    </div>
-  </nav>
+  <nav class="game-grid" id="gameGrid"></nav>
 
   <div class="page-dots" id="pageDots"></div>
 
@@ -706,25 +670,100 @@
     }, 1000);
 });
 
-  // --- page dots (swipe position indicator) ---
+  // --- ゲーム一覧データ（縦=1ページ6枚／横=1ページ4枚で組み直す） ---
+  const GAMES = [
+    { num:'01', title:'ミニ将棋', href:'mini_shogi.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
+    { num:'02', title:'コネクトフォー', href:'connect_four.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
+    { num:'03', title:'ヒット＆ブロー', href:'hit_and_blow.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
+    { num:'04', title:'五目並べ', href:'gomoku.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
+    { num:'05', title:'ブラックジャック', href:'blackjack.html', tags:[{t:'ディーラー戦',c:'cpu'}] },
+    { num:'06', title:'積み木カウント', href:'counting_duel.html', tags:[{t:'2人'}] },
+    { num:'07', title:'ダイス21', href:'dice21.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'}] },
+    { num:'08', title:'ダウト', href:'doubt_game.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'}] },
+    { num:'09', title:'ドット＆ボックス', href:'dots_and_boxes.html', tags:[{t:'2人'}] },
+    { num:'10', title:'2人人狼', href:'werewolf2.html', tags:[{t:'2人'}] },
+  ];
+
   const gameGrid = document.getElementById('gameGrid');
-  const pages = gameGrid.querySelectorAll('.game-page');
   const dotsWrap = document.getElementById('pageDots');
-  pages.forEach((_, i) => {
-    const dot = document.createElement('div');
-    dot.className = 'dot' + (i === 0 ? ' active' : '');
-    dotsWrap.appendChild(dot);
-  });
-  const dots = dotsWrap.querySelectorAll('.dot');
+  const landscapeQuery = window.matchMedia('(orientation: landscape) and (max-height: 600px)');
+
+  function cardsPerPage(){
+    return landscapeQuery.matches ? 4 : 6;
+  }
+
+  function buildCardEl(game){
+    const a = document.createElement('a');
+    a.className = 'game-card';
+    a.href = game.href;
+
+    const info = document.createElement('div');
+    const num = document.createElement('div');
+    num.className = 'num';
+    num.textContent = game.num;
+    const title = document.createElement('div');
+    title.className = 'title';
+    title.textContent = game.title;
+    info.appendChild(num);
+    info.appendChild(title);
+
+    const tagsWrap = document.createElement('div');
+    tagsWrap.className = 'tags';
+    game.tags.forEach(tag => {
+      const span = document.createElement('span');
+      span.className = 'tag' + (tag.c ? ' ' + tag.c : '');
+      span.textContent = tag.t;
+      tagsWrap.appendChild(span);
+    });
+
+    a.appendChild(info);
+    a.appendChild(tagsWrap);
+    return a;
+  }
+
+  function renderGamePages(){
+    const perPage = cardsPerPage();
+    gameGrid.innerHTML = '';
+    const totalPages = Math.ceil(GAMES.length / perPage);
+    for(let p = 0; p < totalPages; p++){
+      const pageEl = document.createElement('div');
+      pageEl.className = 'game-page';
+      GAMES.slice(p * perPage, p * perPage + perPage).forEach(game => {
+        pageEl.appendChild(buildCardEl(game));
+      });
+      gameGrid.appendChild(pageEl);
+    }
+    renderDots(totalPages);
+    gameGrid.scrollLeft = 0;
+  }
+
+  function renderDots(count){
+    dotsWrap.innerHTML = '';
+    for(let i = 0; i < count; i++){
+      const dot = document.createElement('div');
+      dot.className = 'dot' + (i === 0 ? ' active' : '');
+      dotsWrap.appendChild(dot);
+    }
+  }
 
   function updateActiveDot(){
     const pageWidth = gameGrid.clientWidth;
+    if(!pageWidth) return;
     const idx = Math.round(gameGrid.scrollLeft / pageWidth);
-    dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+    dotsWrap.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
   }
   gameGrid.addEventListener('scroll', () => {
     window.requestAnimationFrame(updateActiveDot);
   }, { passive: true });
+
+  renderGamePages();
+
+  // 縦横が切り替わったら1ページあたりの枚数を組み直す
+  if(landscapeQuery.addEventListener){
+    landscapeQuery.addEventListener('change', renderGamePages);
+  } else if(landscapeQuery.addListener){
+    landscapeQuery.addListener(renderGamePages);
+  }
 
     const opening = document.getElementById("opening");
   const openingVideo = document.getElementById("openingVideo");
