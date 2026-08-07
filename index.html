@@ -465,51 +465,9 @@
   font-size:0.9rem;
 }
 
-  /* ============================================================
-     ホーム画面は縦画面専用。横向きに回転したら操作をブロックし、
-     縦に戻すよう促すオーバーレイを最前面に出す。
-     ============================================================ */
-  .orientation-lock{
-    display:none;
-    position:fixed;
-    inset:0;
-    z-index: 99999;
-    background:#000;
-    color:#fff;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
-    gap:18px;
-    padding: 24px;
-  }
-  .orientation-lock-icon{
-    font-size:2.6rem;
-    animation: orientHint 1.6s ease-in-out infinite;
-  }
-  @keyframes orientHint{
-    0%,100%{ transform: rotate(0deg); }
-    50%{ transform: rotate(90deg); }
-  }
-  .orientation-lock-text{
-    font-family:'Kaisei Decol', serif;
-    font-size:0.92rem;
-    letter-spacing:0.08em;
-    line-height:2;
-    max-width: 260px;
-  }
-  @media (orientation: landscape){
-    .orientation-lock{ display:flex; }
-  }
-
 </style>
 </head>
 <body>
-
-<div id="orientationLock" class="orientation-lock">
-  <div class="orientation-lock-icon">📱</div>
-  <div class="orientation-lock-text">この画面は縦向き専用です<br>端末を縦向きに戻してください</div>
-</div>
 
 <div id="opening">
   <video id="openingVideo" autoplay muted playsinline>
