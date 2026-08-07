@@ -630,12 +630,26 @@
 
   /* --- 横画面専用：左右の「手番コイン」インジケーター ---
      左＝白コイン、右＝黒コイン。色は固定で、自分の番のときは不透明、
-     相手の番のときは半透明にするだけ。影などの質感は付けない。 */
-  .side-turn-slot{
+     相手の番のときは半透明にするだけ。影などの質感は付けない。
+     決着時のテキストはコインの中ではなく、上に枠付きラベルとして出す。 */
+  .side-turn-wrap{
     display:none;
     position:fixed;
     top:50%;
     transform: translateY(-50%);
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+    z-index:60;
+  }
+  .side-turn-wrap.left{
+    left: calc(max(7vw, 22px) + env(safe-area-inset-left, 0px));
+  }
+  .side-turn-wrap.right{
+    right: calc(max(7vw, 22px) + env(safe-area-inset-right, 0px));
+  }
+
+  .side-turn-coin{
     width: 15vh;
     height: 15vh;
     max-width:100px;
@@ -643,34 +657,28 @@
     min-width:52px;
     min-height:52px;
     border-radius:50%;
-    z-index:60;
-    align-items:center;
-    justify-content:center;
-    text-align:center;
     opacity:1;
     transition: opacity .2s ease;
   }
-  .side-turn-slot.dim{ opacity:0.5; }
+  .side-turn-wrap.dim .side-turn-coin{ opacity:0.5; }
 
-  .side-turn-slot.left{
-    left: calc(max(7vw, 22px) + env(safe-area-inset-left, 0px));
-    background:#f2efe6;
-    color:#141414;
-  }
-  .side-turn-slot.right{
-    right: calc(max(7vw, 22px) + env(safe-area-inset-right, 0px));
-    background:#141414;
-    color:#f2efe6;
-  }
+  .side-turn-wrap.left .side-turn-coin{ background:#f2efe6; }
+  .side-turn-wrap.right .side-turn-coin{ background:#6f6f6f; }
 
-  .side-turn-text{
-    font-family:'Kaisei Decol', serif;
+  .side-turn-label{
+    display:none;
+    font-family:'Zen Kaku Gothic New', sans-serif;
     font-weight:700;
-    font-size: clamp(0.56rem, 1.7vh, 0.72rem);
-    letter-spacing:0.03em;
-    line-height:1.4;
-    padding: 0 6px;
+    font-size: clamp(0.68rem, 2vh, 0.85rem);
+    letter-spacing:0.06em;
+    color:#fff;
+    border: 1.5px solid #fff;
+    border-radius: 3px;
+    padding: 9px 16px;
+    white-space:nowrap;
+    background: rgba(0,0,0,0.35);
   }
+  .side-turn-label.show{ display:block; }
 
   /* --- 横画面専用：対局終了後のタップ検知オーバーレイ ---
      終了直後は透明のまま画面全体のタップだけを拾い、タップされたら
@@ -762,7 +770,7 @@
     /* モード選択画面（対局開始前）も横向きなら少しコンパクトに */
     .setup-card{ margin-top:4px; padding:16px 18px; gap:10px; }
 
-    .side-turn-slot{ display:flex; }
+    .side-turn-wrap{ display:flex; }
     .landscape-end-overlay.active{ display:flex; }
   }
 </style>
@@ -840,8 +848,14 @@
     </div>
 
     <!-- 横画面専用：左右の手番コイン（白=左／黒=右）。今の手番、決着後は勝った方を光らせる -->
-    <div id="sideTurnLeft" class="side-turn-slot left"><span class="side-turn-text" id="sideTurnLeftText"></span></div>
-    <div id="sideTurnRight" class="side-turn-slot right"><span class="side-turn-text" id="sideTurnRightText"></span></div>
+    <div id="sideTurnLeft" class="side-turn-wrap left">
+      <div class="side-turn-label" id="sideTurnLeftText"></div>
+      <div class="side-turn-coin"></div>
+    </div>
+    <div id="sideTurnRight" class="side-turn-wrap right">
+      <div class="side-turn-label" id="sideTurnRightText"></div>
+      <div class="side-turn-coin"></div>
+    </div>
 
     <!-- 横画面専用：対局終了後にタップで「次の対局へ」をポップ表示するオーバーレイ -->
     <div id="landscapeEndOverlay" class="landscape-end-overlay">
@@ -1162,22 +1176,26 @@
 
     left.classList.remove('dim');
     right.classList.remove('dim');
-    leftText.innerHTML = '';
-    rightText.innerHTML = '';
+    leftText.textContent = '';
+    rightText.textContent = '';
+    leftText.classList.remove('show');
+    rightText.classList.remove('show');
 
     if(gameOver && lastResult){
       if(lastResult.draw){
-        leftText.innerHTML = '今回は<br>引き分けです';
-        rightText.innerHTML = '今回は<br>引き分けです';
+        leftText.textContent = '今回は引き分けです';
+        rightText.textContent = '今回は引き分けです';
       } else if(lastResult.winner === 'white'){
-        leftText.innerHTML = 'あなたの<br>勝利です';
-        rightText.innerHTML = 'あなたの<br>負けです';
+        leftText.textContent = 'あなたの勝利です';
+        rightText.textContent = 'あなたの負けです';
         right.classList.add('dim');
       } else {
-        leftText.innerHTML = 'あなたの<br>負けです';
-        rightText.innerHTML = 'あなたの<br>勝利です';
+        leftText.textContent = 'あなたの負けです';
+        rightText.textContent = 'あなたの勝利です';
         left.classList.add('dim');
       }
+      leftText.classList.add('show');
+      rightText.classList.add('show');
     } else {
       if(turn === 'white'){
         right.classList.add('dim');
