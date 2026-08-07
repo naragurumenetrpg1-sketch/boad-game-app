@@ -629,8 +629,8 @@
   .controls .main-btn.hidden{ display:none; }
 
   /* --- 横画面専用：左右の「手番コイン」インジケーター ---
-     左＝白側、右＝黒側で常に塗りつぶし表示。今の手番の側ははっきりした色、
-     そうでない側はグレーがかった色にして、光らせたりはしない。 */
+     左＝白コイン、右＝黒コイン。色は固定で、自分の番のときは不透明、
+     相手の番のときは半透明にするだけ。影などの質感は付けない。 */
   .side-turn-slot{
     display:none;
     position:fixed;
@@ -644,27 +644,33 @@
     min-height:52px;
     border-radius:50%;
     z-index:60;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 2px 3px rgba(255,255,255,0.12), inset 0 -3px 5px rgba(0,0,0,0.35);
-    transition: background .2s ease;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    opacity:1;
+    transition: opacity .2s ease;
   }
+  .side-turn-slot.dim{ opacity:0.5; }
+
   .side-turn-slot.left{
     left: calc(max(7vw, 22px) + env(safe-area-inset-left, 0px));
+    background:#f2efe6;
+    color:#141414;
   }
   .side-turn-slot.right{
     right: calc(max(7vw, 22px) + env(safe-area-inset-right, 0px));
+    background:#141414;
+    color:#f2efe6;
   }
 
-  /* 白側スロット：白の番＝白、黒の番＝薄いグレー */
-  .side-turn-slot.left.on-white{ background:#f2efe6; }
-  .side-turn-slot.left.on-black{ background:#9a968a; }
-
-  /* 黒側スロット：白の番＝黒寄りのグレー、黒の番＝黒 */
-  .side-turn-slot.right.on-white{ background:#4a4a4a; }
-  .side-turn-slot.right.on-black{ background:#0c0c0c; }
-
-  /* 引き分け時など、どちらの手番でもない場合はそれぞれ控えめな色にしておく */
-  .side-turn-slot.left.on-draw{ background:#9a968a; }
-  .side-turn-slot.right.on-draw{ background:#4a4a4a; }
+  .side-turn-text{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size: clamp(0.56rem, 1.7vh, 0.72rem);
+    letter-spacing:0.03em;
+    line-height:1.4;
+    padding: 0 6px;
+  }
 
   /* --- 横画面専用：対局終了後のタップ検知オーバーレイ ---
      終了直後は透明のまま画面全体のタップだけを拾い、タップされたら
@@ -756,7 +762,7 @@
     /* モード選択画面（対局開始前）も横向きなら少しコンパクトに */
     .setup-card{ margin-top:4px; padding:16px 18px; gap:10px; }
 
-    .side-turn-slot{ display:block; }
+    .side-turn-slot{ display:flex; }
     .landscape-end-overlay.active{ display:flex; }
   }
 </style>
@@ -834,8 +840,8 @@
     </div>
 
     <!-- 横画面専用：左右の手番コイン（白=左／黒=右）。今の手番、決着後は勝った方を光らせる -->
-    <div id="sideTurnLeft" class="side-turn-slot left"></div>
-    <div id="sideTurnRight" class="side-turn-slot right"></div>
+    <div id="sideTurnLeft" class="side-turn-slot left"><span class="side-turn-text" id="sideTurnLeftText"></span></div>
+    <div id="sideTurnRight" class="side-turn-slot right"><span class="side-turn-text" id="sideTurnRightText"></span></div>
 
     <!-- 横画面専用：対局終了後にタップで「次の対局へ」をポップ表示するオーバーレイ -->
     <div id="landscapeEndOverlay" class="landscape-end-overlay">
@@ -1150,17 +1156,35 @@
   function updateSideTurnIndicators(){
     const left = document.getElementById('sideTurnLeft');
     const right = document.getElementById('sideTurnRight');
+    const leftText = document.getElementById('sideTurnLeftText');
+    const rightText = document.getElementById('sideTurnRightText');
     if(!left || !right) return;
 
-    let highlightSide = null;
-    if(gameOver && lastResult && !lastResult.draw){
-      highlightSide = lastResult.winner;
-    } else if(!gameOver){
-      highlightSide = turn;
-    }
+    left.classList.remove('dim');
+    right.classList.remove('dim');
+    leftText.innerHTML = '';
+    rightText.innerHTML = '';
 
-    left.className = 'side-turn-slot left' + (highlightSide === 'white' ? ' on-white' : highlightSide === 'black' ? ' on-black' : ' on-draw');
-    right.className = 'side-turn-slot right' + (highlightSide === 'black' ? ' on-black' : highlightSide === 'white' ? ' on-white' : ' on-draw');
+    if(gameOver && lastResult){
+      if(lastResult.draw){
+        leftText.innerHTML = '今回は<br>引き分けです';
+        rightText.innerHTML = '今回は<br>引き分けです';
+      } else if(lastResult.winner === 'white'){
+        leftText.innerHTML = 'あなたの<br>勝利です';
+        rightText.innerHTML = 'あなたの<br>負けです';
+        right.classList.add('dim');
+      } else {
+        leftText.innerHTML = 'あなたの<br>負けです';
+        rightText.innerHTML = 'あなたの<br>勝利です';
+        left.classList.add('dim');
+      }
+    } else {
+      if(turn === 'white'){
+        right.classList.add('dim');
+      } else {
+        left.classList.add('dim');
+      }
+    }
   }
 
   // --- 横画面用：対局終了後、タップで「次の対局へ」をポップ表示するオーバーレイ ---
