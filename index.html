@@ -96,12 +96,17 @@
     padding: 2px 4px;
   }
 
-  /* 横画面では1ページ4枚（横1列）表示に切り替え */
+  /* 横画面では1ページ4枚（横1列）表示に切り替え。行の高さは中身に合わせて伸びるようにし、下が切れないようにする */
   @media (orientation: landscape) and (max-height: 600px){
     .game-page{
       grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: 92px;
+      grid-template-rows: minmax(100px, auto);
       gap: 8px;
+    }
+    .game-card .title{
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
     }
   }
 
