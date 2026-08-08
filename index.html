@@ -165,6 +165,26 @@
     transform: scale(1.2);
   }
 
+  /* 横画面のカード帯用の位置バー（縦画面では非表示） */
+  .page-slider{
+    display:none;
+    position:relative;
+    width: min(200px, 60vw);
+    height:4px;
+    border-radius:2px;
+    background: var(--hairline);
+    margin: 6px auto 0;
+    overflow:hidden;
+  }
+  .page-slider-thumb{
+    position:absolute;
+    top:0; left:0;
+    height:100%;
+    width:22%;
+    border-radius:2px;
+    background:#fff;
+  }
+
   footer{
     font-size:0.68rem;
     color: var(--silver-dim);
@@ -467,25 +487,51 @@
   font-size:0.9rem;
 }
 
-/* 横画面では1ページ4枚（横1列）表示に切り替え。
-   おまけ機能を非表示にして空いた縦のスペースを使い、カードは正方形
-   （縦＝横）になるよう aspect-ratio でサイズを揃える。
+/* 横画面では、全カードをトランプのような縦長・同サイズのカードにして
+   横一列に並べ、1枚ずつスワイプで選べるようにする。
+   ・.app の最大幅を外して、横向きの広い画面幅をそのまま使う
+   ・カードは中央に1枚スナップし、左右の隣のカードが少し見える「トランプをめくる」ような見た目にする
+   ・カードは高さ基準・aspect-ratioで幅を決めるので、必ず同じ大きさになる
+   ・ページ切り替えの概念がなくなるのでドットは非表示、代わりに細いスライダーバーで位置を示す
    ※このブロックは必ずスタイルシートの最後に置くこと。CSSは同じ詳細度なら
    「後に書かれたルールが勝つ」ため、途中に置くと後ろにある通常時の
    .game-card や .extras のルールに上書きされてしまう。 */
 @media (orientation: landscape) and (max-height: 600px){
+  .app{
+    max-width: none;
+    width: 100%;
+  }
   .extras{
     display:none;
   }
+  .page-dots{
+    display:none;
+  }
+  .page-slider{
+    display:block;
+  }
+  .game-grid{
+    --card-h: clamp(110px, 62vh, 190px);
+    --card-w: calc(var(--card-h) * 5 / 7); /* トランプカードに近い縦長比率 */
+    scroll-padding-inline: calc(50% - var(--card-w) / 2);
+  }
   .game-page{
-    grid-template-columns: repeat(4, 1fr);
-    grid-template-rows: auto;
-    align-items: start;
-    gap: 8px;
+    flex: 0 0 auto;
+    width:auto;
+    scroll-snap-align: none;
+    display:flex;
+    flex-direction:row;
+    align-items:center;
+    justify-content:flex-start;
+    gap: 14px;
+    padding-block: 2px;
+    padding-inline: calc(50% - var(--card-w) / 2);
   }
   .game-card{
-    aspect-ratio: 1 / 1;
-    height:auto;
+    flex: 0 0 auto;
+    height: var(--card-h);
+    width: var(--card-w);
+    scroll-snap-align: center;
   }
   .game-card .title{
     white-space:nowrap;
@@ -493,12 +539,10 @@
     text-overflow:ellipsis;
   }
   .game-card .tags{
-    flex-wrap:nowrap;
-    overflow:hidden;
+    flex-wrap:wrap;
   }
   .game-card .tag{
     white-space:nowrap;
-    flex-shrink:0;
   }
 }
 
@@ -550,6 +594,7 @@
   <nav class="game-grid" id="gameGrid"></nav>
 
   <div class="page-dots" id="pageDots"></div>
+  <div class="page-slider" id="pageSlider"><div class="page-slider-thumb" id="pageSliderThumb"></div></div>
 
   <div class="extras">
     <div class="extras-heading">おまけ機能</div>
@@ -697,7 +742,7 @@
     }, 1000);
 });
 
-  // --- ゲーム一覧データ（縦=1ページ6枚／横=1ページ4枚で組み直す） ---
+  // --- ゲーム一覧データ（縦=1ページ6枚でページ送り／横=全カードを1本の帯で横スクロール） ---
   const GAMES = [
     { num:'01', title:'ミニ将棋', href:'mini_shogi.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
     { num:'02', title:'コネクトフォー', href:'connect_four.html', tags:[{t:'2人'},{t:'CPU',c:'cpu'},{t:'達人',c:'master'}] },
@@ -713,10 +758,12 @@
 
   const gameGrid = document.getElementById('gameGrid');
   const dotsWrap = document.getElementById('pageDots');
+  const sliderThumb = document.getElementById('pageSliderThumb');
   const landscapeQuery = window.matchMedia('(orientation: landscape) and (max-height: 600px)');
 
   function cardsPerPage(){
-    return landscapeQuery.matches ? 4 : 6;
+    // 横画面は「ページ」に区切らず、全カードを1本の帯にして横スクロールで選ぶ
+    return landscapeQuery.matches ? GAMES.length : 6;
   }
 
   function buildCardEl(game){
@@ -762,6 +809,7 @@
     }
     renderDots(totalPages);
     gameGrid.scrollLeft = 0;
+    updateSliderThumb();
   }
 
   function renderDots(count){
@@ -779,8 +827,24 @@
     const idx = Math.round(gameGrid.scrollLeft / pageWidth);
     dotsWrap.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
   }
+
+  // 横画面：カード帯のスクロール位置を、下の細いバーの中の白いつまみに反映する
+  function updateSliderThumb(){
+    if(!sliderThumb) return;
+    const scrollable = gameGrid.scrollWidth - gameGrid.clientWidth;
+    const ratio = scrollable > 0 ? gameGrid.scrollLeft / scrollable : 0;
+    const thumbPercent = 22; // .page-slider-thumb の width と合わせる
+    sliderThumb.style.left = (ratio * (100 - thumbPercent)) + '%';
+  }
+
   gameGrid.addEventListener('scroll', () => {
-    window.requestAnimationFrame(updateActiveDot);
+    window.requestAnimationFrame(() => {
+      if(landscapeQuery.matches){
+        updateSliderThumb();
+      } else {
+        updateActiveDot();
+      }
+    });
   }, { passive: true });
 
   renderGamePages();
