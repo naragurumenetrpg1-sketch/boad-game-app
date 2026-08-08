@@ -511,7 +511,7 @@
     display:block;
   }
   .game-grid{
-    --card-h: clamp(110px, 62vh, 190px);
+    --card-h: clamp(110px, 58vh, 190px);
     --card-w: calc(var(--card-h) * 5 / 7); /* トランプカードに近い縦長比率 */
     scroll-padding-inline: calc(50% - var(--card-w) / 2);
   }
@@ -524,7 +524,7 @@
     align-items:center;
     justify-content:flex-start;
     gap: 14px;
-    padding-block: 2px;
+    padding-block: 18px; /* カードの box-shadow が overflow-y:hidden で切れないよう余白を確保 */
     padding-inline: calc(50% - var(--card-w) / 2);
   }
   .game-card{
