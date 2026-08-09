@@ -524,8 +524,7 @@
     display:block;
   }
   .game-grid{
-    scroll-snap-type: x proximity; /* mandatoryだと強制的にカクッと吸着するので、少し緩めて滑らかにする */
-    scroll-behavior: smooth;
+    scroll-snap-type: none; /* スワイプ中はスナップさせず自由に滑らせ、止まったらJS側で中央のカードに寄せる */
     --card-h: clamp(110px, 58vh, 190px);
     --card-w: calc(var(--card-h) * 5 / 7); /* トランプカードに近い縦長比率 */
     scroll-padding-inline: calc(50% - var(--card-w) / 2);
@@ -853,10 +852,37 @@
     sliderThumb.style.left = (ratio * (100 - thumbPercent)) + '%';
   }
 
+  // 横画面：スクロールが止まったら、一番中央に近いカードまでゆっくり寄せる
+  let snapSettleTimer = null;
+  function scheduleSnapSettle(){
+    clearTimeout(snapSettleTimer);
+    snapSettleTimer = setTimeout(snapToNearestCard, 130);
+  }
+  function snapToNearestCard(){
+    if(!landscapeQuery.matches) return;
+    const cardEls = gameGrid.querySelectorAll('.game-card');
+    if(!cardEls.length) return;
+    const gridRect = gameGrid.getBoundingClientRect();
+    const gridCenter = gridRect.left + gridRect.width / 2;
+    let closest = null;
+    let closestDist = Infinity;
+    cardEls.forEach(card => {
+      const r = card.getBoundingClientRect();
+      const cardCenter = r.left + r.width / 2;
+      const dist = Math.abs(cardCenter - gridCenter);
+      if(dist < closestDist){ closestDist = dist; closest = card; }
+    });
+    if(closest){
+      const target = closest.offsetLeft - (gameGrid.clientWidth / 2) + (closest.offsetWidth / 2);
+      gameGrid.scrollTo({ left: target, behavior: 'smooth' });
+    }
+  }
+
   gameGrid.addEventListener('scroll', () => {
     window.requestAnimationFrame(() => {
       if(landscapeQuery.matches){
         updateSliderThumb();
+        scheduleSnapSettle();
       } else {
         updateActiveDot();
       }
