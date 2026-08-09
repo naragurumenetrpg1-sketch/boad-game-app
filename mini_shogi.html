@@ -337,6 +337,44 @@
     25%{ transform: translateX(-3px); }
     75%{ transform: translateX(3px); }
   }
+  .cell.king-in-check{
+    animation: check-glow 1s ease-in-out infinite;
+  }
+  @keyframes check-glow{
+    0%, 100%{ box-shadow: inset 0 0 0 2px rgba(178,42,42,0.55), 0 0 6px 1px rgba(178,42,42,0.35); }
+    50%{ box-shadow: inset 0 0 0 2px rgba(214,64,64,0.95), 0 0 14px 4px rgba(214,64,64,0.55); }
+  }
+
+  /* --- check (王手) popup --- */
+  .check-popup{
+    position:fixed;
+    top: 40%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.7) rotate(-6deg);
+    z-index: 60;
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size: 2.1rem;
+    letter-spacing: 0.2em;
+    color: #e8caca;
+    background: radial-gradient(ellipse at center, rgba(120,20,20,0.92), rgba(60,8,8,0.92));
+    border: 2px solid rgba(214,64,64,0.85);
+    border-radius: 6px;
+    padding: 10px 26px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(255,255,255,0.08);
+    opacity: 0;
+    pointer-events: none;
+  }
+  .check-popup.show{
+    animation: check-stamp 1.1s cubic-bezier(.2,.9,.3,1) forwards;
+  }
+  @keyframes check-stamp{
+    0%{ opacity:0; transform: translate(-50%, -50%) scale(1.6) rotate(-6deg); }
+    18%{ opacity:1; transform: translate(-50%, -50%) scale(0.94) rotate(-6deg); }
+    30%{ transform: translate(-50%, -50%) scale(1) rotate(-6deg); }
+    78%{ opacity:1; transform: translate(-50%, -50%) scale(1) rotate(-6deg); }
+    100%{ opacity:0; transform: translate(-50%, -50%) scale(1) rotate(-6deg); }
+  }
 
   /* --- shogi koma piece (pentagon) --- */
   .koma{
@@ -478,12 +516,99 @@
     padding: 5px 14px;
     margin-bottom: 18px;
   }
+
+  /* --- start screen (mode selection before entering the game) --- */
+  .start-overlay{
+    position:fixed; inset:0;
+    background:
+      radial-gradient(ellipse at 50% -10%, #1c1c1c 0%, #0a0a0a 55%, #000000 100%);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index: 150;
+    padding: 20px;
+  }
+  .start-overlay.show{ display:flex; }
+  .start-card{
+    width:100%;
+    max-width: 340px;
+    background: linear-gradient(180deg, var(--paper), var(--paper-deep));
+    border: 1px solid var(--hairline);
+    border-radius: 5px;
+    padding: 30px 26px 26px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06);
+    text-align:center;
+  }
+  .start-card h1{
+    font-size: 1.5rem;
+  }
+  .start-card .start-tagline{
+    font-size:0.68rem;
+    letter-spacing:0.12em;
+    color: var(--silver-dim);
+    margin: 14px 0 22px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hairline);
+  }
+  .start-mode-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .start-mode-btn{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:2px;
+    width:100%;
+    text-align:left;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--silver-dim);
+    border-radius: 3px;
+    padding: 12px 16px;
+    cursor:pointer;
+    transition: background .15s ease, border-color .15s ease, transform .1s ease;
+  }
+  .start-mode-btn:hover{ background: rgba(255,255,255,0.08); border-color:#fff; }
+  .start-mode-btn:active{ transform: translateY(1px); }
+  .start-mode-btn .mode-label{
+    font-family:'Kaisei Decol', serif;
+    font-weight:700;
+    font-size:0.95rem;
+    color:#fff;
+    letter-spacing:0.08em;
+  }
+  .start-mode-btn .mode-desc{
+    font-size:0.66rem;
+    color:var(--silver-dim);
+    letter-spacing:0.04em;
+  }
 </style>
 </head>
 <body>
 <a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
 <button class="undo-btn undo-btn-sente" id="undoBtn" disabled>待った</button>
 <button class="undo-btn undo-btn-gote" id="undoBtnGote" disabled>待った</button>
+<div id="startScreen" class="start-overlay show">
+  <div class="start-card">
+    <h1>三ノ将棋<span class="small">MINI SHOGI · 3 × 4</span></h1>
+    <div class="start-tagline">対局モードを選んでください</div>
+    <div class="start-mode-list">
+      <button class="start-mode-btn" id="startTwoPlayerBtn">
+        <span class="mode-label">2人対戦</span>
+        <span class="mode-desc">同じ端末で交互に指します</span>
+      </button>
+      <button class="start-mode-btn" id="startCPUBtn">
+        <span class="mode-label">CPU対戦</span>
+        <span class="mode-desc">標準の強さのCPUと対局</span>
+      </button>
+      <button class="start-mode-btn" id="startCPUMasterBtn">
+        <span class="mode-label">達人CPU</span>
+        <span class="mode-desc">より深く読む強めのCPUと対局</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="app">
 
   <header>
@@ -544,6 +669,19 @@
   </div>
 </div>
 
+<div id="checkPopup" class="check-popup">王手！</div>
+
+<div id="newGameConfirmOverlay" class="confirm-overlay">
+  <div class="confirm-card">
+    <div class="big">はじめから</div>
+    <p>現在の対局を中断してやり直します。よろしいですか？</p>
+    <div class="confirm-row">
+      <button id="newGameConfirmYesBtn">はい</button>
+      <button id="newGameConfirmNoBtn">いいえ</button>
+    </div>
+  </div>
+</div>
+
 <div id="undoConfirmOverlay" class="confirm-overlay">
   <div class="confirm-card" id="undoConfirmCard">
     <div class="big">待った</div>
@@ -565,6 +703,7 @@
   let moveHistory = [];
   let rejectionCount = 0;
   let undoBlocked = false;
+  let undoUseCount = 0;
   let pendingUndoRequestedBy = null;
   let vsCPU = false;
   let cpuDifficulty = 'normal';
@@ -624,6 +763,7 @@
     moveHistory = [];
     rejectionCount = 0;
     undoBlocked = false;
+    undoUseCount = 0;
     cpuMovesMade = 0;
     document.getElementById('winnerOverlay').classList.remove('show');
 
@@ -651,12 +791,13 @@
     });
     rejectionCount = 0;
     undoBlocked = false;
+    undoUseCount = 0;
     updateUndoButton();
     updateChromeVisibility();
   }
 
   function updateUndoButton(){
-    const disabled = moveHistory.length === 0 || undoBlocked;
+    const disabled = moveHistory.length === 0 || undoBlocked || undoUseCount >= 2;
     const btn = document.getElementById('undoBtn');
     const btnGote = document.getElementById('undoBtnGote');
     if(btn) btn.disabled = disabled;
@@ -787,6 +928,49 @@
     return out;
   }
 
+  function isKingInCheck(simBoard, owner){
+    let kr = -1, kc = -1;
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        const p = simBoard[r][c];
+        if(p && p.owner === owner && p.type === 'king'){ kr = r; kc = c; }
+      }
+    }
+    if(kr === -1) return false;
+    const opponent = owner === 'sente' ? 'gote' : 'sente';
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        const p = simBoard[r][c];
+        if(!p || p.owner !== opponent) continue;
+        const moves = simLegalMovesFrom(simBoard, r, c);
+        if(moves.some(([mr,mc]) => mr === kr && mc === kc)) return true;
+      }
+    }
+    return false;
+  }
+
+  function hasAnyLegalMove(owner){
+    for(let r=0;r<ROWS;r++){
+      for(let c=0;c<COLS;c++){
+        const p = board[r][c];
+        if(p && p.owner === owner && legalMovesFrom(r,c).length > 0) return true;
+      }
+    }
+    const hand = hands[owner] || {};
+    for(const type of Object.keys(hand)){
+      if((hand[type] || 0) <= 0) continue;
+      if(legalDropsFor(owner, type).length > 0) return true;
+    }
+    return false;
+  }
+
+  function showCheckPopup(){
+    const el = document.getElementById('checkPopup');
+    el.classList.remove('show');
+    void el.offsetWidth;
+    el.classList.add('show');
+  }
+
   function simLegalDrops(simBoard, simHands, owner, type){
     const out = [];
     const lastRow = owner === 'sente' ? 0 : ROWS-1;
@@ -903,26 +1087,48 @@
     }
   }
 
+  const CPU_TIME_BUDGET_MS = 300;
+
   function cpuChooseMove(){
     const side = cpuSide();
     const opponent = side === 'sente' ? 'gote' : 'sente';
-    const CPU_DEPTH = cpuDifficulty === 'master' ? 5 : 3;
+    const maxDepth = cpuDifficulty === 'master' ? 8 : 4;
     const moves = generateAllMoves(board, hands, side);
     if(moves.length === 0) return null;
-    let bestMove = null;
-    let bestScore = side === 'gote' ? -Infinity : Infinity;
-    for(const move of moves){
-      const b2 = cloneBoardState(board), h2 = cloneHandsState(hands);
-      const kingCaptured = applySimMove(b2, h2, move, side);
-      let score;
-      if(kingCaptured){
-        score = side === 'gote' ? 10000 : -10000;
-      } else {
-        score = minimaxSearch(b2, h2, opponent, CPU_DEPTH, -Infinity, Infinity);
+
+    const startTime = performance.now();
+    let bestMove = moves[0];
+
+    // Iterative deepening: search depth 1, 2, 3... keeping the best result
+    // from the deepest COMPLETED depth, and bail out once the time budget
+    // (300ms) is used up so the UI never freezes, even on the "master" level.
+    for(let depth = 1; depth <= maxDepth; depth++){
+      if(performance.now() - startTime > CPU_TIME_BUDGET_MS) break;
+
+      let depthBestMove = null;
+      let depthBestScore = side === 'gote' ? -Infinity : Infinity;
+      let timedOut = false;
+
+      for(const move of moves){
+        if(performance.now() - startTime > CPU_TIME_BUDGET_MS){ timedOut = true; break; }
+        const b2 = cloneBoardState(board), h2 = cloneHandsState(hands);
+        const kingCaptured = applySimMove(b2, h2, move, side);
+        let score;
+        if(kingCaptured){
+          score = side === 'gote' ? 10000 : -10000;
+        } else {
+          score = minimaxSearch(b2, h2, opponent, depth - 1, -Infinity, Infinity);
+        }
+        const better = side === 'gote' ? (score > depthBestScore) : (score < depthBestScore);
+        if(better){ depthBestScore = score; depthBestMove = move; }
       }
-      const better = side === 'gote' ? (score > bestScore) : (score < bestScore);
-      if(better){ bestScore = score; bestMove = move; }
+
+      if(timedOut || !depthBestMove) break;
+      bestMove = depthBestMove;
+      // A forced king capture line was found — no need to search deeper.
+      if(Math.abs(depthBestScore) >= 9000) break;
     }
+
     return bestMove;
   }
 
@@ -931,9 +1137,12 @@
     if(gameOver || !vsCPU || turn !== cpuSide()) return;
     const move = cpuChooseMove();
     if(!move){
-      // no legal move available for CPU: pass back to the human rather than crash
-      turn = turn === 'sente' ? 'gote' : 'sente';
-      render(true);
+      // Safety net: CPU has no legal move. checkAndHandleNoMoves() should
+      // normally have already caught this right after the turn switched.
+      if(!checkAndHandleNoMoves()){
+        turn = turn === 'sente' ? 'gote' : 'sente';
+        render(true);
+      }
       return;
     }
     pushHistorySnapshot();
@@ -959,6 +1168,11 @@
     selected = null;
     selectedDrop = null;
     render(true);
+
+    if(checkAndHandleNoMoves()) return;
+
+    if(isKingInCheck(board, turn)) showCheckPopup();
+
     if(vsCPU && turn === cpuSide() && !gameOver){
       cpuThinking = true;
       const sideLabel = cpuSide() === 'sente' ? '先手' : '後手';
@@ -974,6 +1188,51 @@
     text.textContent = (winner === 'sente' ? '先手' : '後手') + 'の勝ち！';
     document.getElementById('loserText').textContent = (loser === 'sente' ? '先手' : '後手') + 'は負けました';
     overlay.classList.add('show');
+  }
+
+  function showDraw(){
+    const overlay = document.getElementById('winnerOverlay');
+    document.getElementById('winnerText').textContent = '引き分け';
+    document.getElementById('loserText').textContent = '両者とも動かせる手がありません';
+    overlay.classList.add('show');
+  }
+
+  // If the side to move has no legal move at all (no piece can move, no hand
+  // piece can be dropped), show a message and auto-pass to the other side
+  // instead of leaving the board stuck. If both sides end up unable to move,
+  // the game ends in a draw.
+  function checkAndHandleNoMoves(){
+    if(gameOver) return false;
+    if(hasAnyLegalMove(turn)) return false;
+
+    const sideLabel = turn === 'sente' ? '先手' : '後手';
+    document.getElementById('statusText').textContent = sideLabel + 'は動かせる手がありません。パスします…';
+
+    setTimeout(() => {
+      if(gameOver) return;
+      turn = turn === 'sente' ? 'gote' : 'sente';
+      selected = null;
+      selectedDrop = null;
+      render(true);
+
+      if(!hasAnyLegalMove(turn)){
+        gameOver = true;
+        showDraw();
+        render();
+        return;
+      }
+
+      if(isKingInCheck(board, turn)) showCheckPopup();
+
+      if(vsCPU && turn === cpuSide() && !gameOver){
+        cpuThinking = true;
+        const sideLabel2 = cpuSide() === 'sente' ? '先手' : '後手';
+        document.getElementById('statusText').textContent = (cpuDifficulty === 'master' ? '達人CPU' : 'CPU') + '（' + sideLabel2 + '）が考え中…';
+        setTimeout(cpuTakeTurn, 600);
+      }
+    }, 1200);
+
+    return true;
   }
 
   function onCellClick(r,c){
@@ -1095,6 +1354,9 @@
       highlightCells = legalDropsFor(turn, selectedDrop);
     }
 
+    const senteInCheck = !gameOver && isKingInCheck(board, 'sente');
+    const goteInCheck = !gameOver && isKingInCheck(board, 'gote');
+
     for(let r=0;r<ROWS;r++){
       for(let c=0;c<COLS;c++){
         const cell = document.createElement('div');
@@ -1106,7 +1368,12 @@
         if(highlightCells.some(([hr,hc]) => hr===r && hc===c)) cell.classList.add('highlight');
 
         const piece = board[r][c];
-        if(piece) cell.appendChild(komaEl(piece));
+        if(piece){
+          cell.appendChild(komaEl(piece));
+          if(piece.type === 'king' && ((piece.owner === 'sente' && senteInCheck) || (piece.owner === 'gote' && goteInCheck))){
+            cell.classList.add('king-in-check');
+          }
+        }
 
         cell.addEventListener('click', () => onCellClick(r,c));
         cell.addEventListener('keydown', (e) => { if(e.key==='Enter' || e.key===' '){ e.preventDefault(); onCellClick(r,c); } });
@@ -1126,14 +1393,16 @@
     }
 
     const status = document.getElementById('statusText');
+    const turnInCheck = (turn === 'sente' && senteInCheck) || (turn === 'gote' && goteInCheck);
+    const checkPrefix = turnInCheck ? '王手！ ' : '';
     if(gameOver){
       status.textContent = '対局終了';
     } else if(selectedDrop){
-      status.textContent = KANJI[selectedDrop] + ' を打つマスを選んでください';
+      status.textContent = checkPrefix + KANJI[selectedDrop] + ' を打つマスを選んでください';
     } else if(selected){
-      status.textContent = '移動先のマスを選んでください';
+      status.textContent = checkPrefix + '移動先のマスを選んでください';
     } else {
-      status.textContent = '駒か持駒を選んでください';
+      status.textContent = checkPrefix + '駒か持駒を選んでください';
     }
   }
 
@@ -1151,6 +1420,14 @@
   document.getElementById('modeCPUBtn').addEventListener('click', () => setMode(true, 'normal'));
   document.getElementById('modeCPUMasterBtn').addEventListener('click', () => setMode(true, 'master'));
 
+  function chooseStartMode(newVsCPU, newDifficulty){
+    setMode(newVsCPU, newDifficulty);
+    document.getElementById('startScreen').classList.remove('show');
+  }
+  document.getElementById('startTwoPlayerBtn').addEventListener('click', () => chooseStartMode(false, 'normal'));
+  document.getElementById('startCPUBtn').addEventListener('click', () => chooseStartMode(true, 'normal'));
+  document.getElementById('startCPUMasterBtn').addEventListener('click', () => chooseStartMode(true, 'master'));
+
   document.getElementById('sideSenteBtn').addEventListener('click', () => {
     if(humanSide === 'sente') return;
     humanSide = 'sente';
@@ -1166,22 +1443,37 @@
     resetGame();
   });
 
-  document.getElementById('newGameBtn').addEventListener('click', resetGame);
+  document.getElementById('newGameBtn').addEventListener('click', () => {
+    if(moveHistory.length === 0){
+      // Nothing to lose yet, so just start fresh without asking.
+      resetGame();
+      return;
+    }
+    document.getElementById('newGameConfirmOverlay').classList.add('show');
+  });
+  document.getElementById('newGameConfirmYesBtn').addEventListener('click', () => {
+    document.getElementById('newGameConfirmOverlay').classList.remove('show');
+    resetGame();
+  });
+  document.getElementById('newGameConfirmNoBtn').addEventListener('click', () => {
+    document.getElementById('newGameConfirmOverlay').classList.remove('show');
+  });
   document.getElementById('againBtn').addEventListener('click', resetGame);
   document.getElementById('rulesBtn').addEventListener('click', () => {
     document.getElementById('rules').classList.toggle('open');
   });
 
   function openUndoConfirm(requestedBy){
-    if(moveHistory.length === 0 || undoBlocked) return;
+    if(moveHistory.length === 0 || undoBlocked || undoUseCount >= 2) return;
     if(vsCPU){
+      undoUseCount++;
       undoForCPUMode();
       return;
     }
     pendingUndoRequestedBy = requestedBy;
     const responder = requestedBy === 'sente' ? '後手' : '先手';
     document.getElementById('undoConfirmText').textContent =
-      '直前の一手を取り消します。' + responder + 'の許可が必要です。よろしいですか？';
+      '直前の一手を取り消します。' + responder + 'の許可が必要です。よろしいですか？（1手につき待ったは2回まで）';
     // Rotate the card so whichever side must respond can read it right-side up.
     document.getElementById('undoConfirmCard').classList.toggle('rotated', requestedBy === 'sente');
     document.getElementById('undoConfirmOverlay').classList.add('show');
@@ -1200,6 +1492,7 @@
 
   document.getElementById('undoAllowBtn').addEventListener('click', () => {
     document.getElementById('undoConfirmOverlay').classList.remove('show');
+    undoUseCount++;
     undoLastMove();
   });
   document.getElementById('undoDenyBtn').addEventListener('click', () => {
