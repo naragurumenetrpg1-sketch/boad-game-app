@@ -74,8 +74,8 @@
      side is currently seated at the bottom of the screen gets the bottom-left
      spot; the other side (seated at the top, viewing everything upside down)
      gets its near-left, which on screen is the top-right corner. */
-  .undo-btn-seat-bottom-left{ top:auto; right:auto; bottom: 14px; left: 14px; transform:none; }
-  .undo-btn-seat-top-right{ bottom:auto; left:auto; top: 14px; right: 14px; transform: rotate(180deg); }
+  .undo-btn-seat-bottom-left{ top:auto; right:auto; bottom: clamp(60px, 18vh, 220px); left: 14px; transform:none; }
+  .undo-btn-seat-top-right{ bottom:auto; left:auto; top: clamp(60px, 18vh, 220px); right: 14px; transform: rotate(180deg); }
   .undo-btn-seat-top-right:hover:not(:disabled){ transform: rotate(180deg); }
 
   .confirm-overlay{
@@ -136,7 +136,7 @@
     color: var(--silver);
     display:flex;
     justify-content:center;
-    align-items:flex-start;
+    align-items:center;
     padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
   }
 
@@ -1303,16 +1303,18 @@
     return div;
   }
 
-  function isFlippedSide(owner){
-    if(vsCPU && humanSide === 'gote') return owner === 'sente';
-    return owner === 'gote';
-  }
-
   function renderKomadai(owner){
     const el = document.getElementById(owner === 'sente' ? 'senteKomadai' : 'goteKomadai');
     el.innerHTML = '';
-    const flipped = isFlippedSide(owner);
-    el.classList.toggle('komadai-flipped', flipped);
+    // Whichever tray sits at the top of the screen gets its whole card rotated
+    // (label included) to match how a piece placed in front of the "far" seat
+    // would look to an outside viewer. The piece icon itself is always
+    // rendered with no local rotation of its own, so the container rotation
+    // alone decides upright (bottom tray) vs upside-down (top tray) — this
+    // keeps captured-piece kanji consistent with how the same piece looks on
+    // the board itself.
+    const atTop = !isTurnAtBottom(owner);
+    el.classList.toggle('komadai-flipped', atTop);
     const label = document.createElement('div');
     label.className = 'label';
     label.textContent = (owner === 'sente' ? '先手 持駒' : '後手 持駒');
@@ -1334,7 +1336,7 @@
       wrap.setAttribute('role','button');
       wrap.setAttribute('aria-label', KANJI[type] + ' を打つ');
       const piece = { owner, type };
-      wrap.appendChild(komaEl(piece, { noFlip: !flipped }));
+      wrap.appendChild(komaEl(piece, { noFlip: true }));
       const count = document.createElement('div');
       count.className = 'count';
       count.textContent = hand[type];
@@ -1390,18 +1392,7 @@
 
     const status = document.getElementById('statusText');
     const turnInCheck = (turn === 'sente' && senteInCheck) || (turn === 'gote' && goteInCheck);
-    const checkPrefix = turnInCheck ? '王手！ ' : '';
-    if(gameOver){
-      status.textContent = '';
-    } else if(selectedDrop){
-      status.textContent = checkPrefix + KANJI[selectedDrop] + ' を打つマスを選んでください';
-    } else if(selected){
-      status.textContent = checkPrefix + '移動先のマスを選んでください';
-    } else if(turnInCheck){
-      status.textContent = checkPrefix;
-    } else {
-      status.textContent = '';
-    }
+    status.textContent = (!gameOver && turnInCheck) ? '王手！' : '';
   }
 
   // Whichever player's zone currently sits at the bottom of the screen (the
