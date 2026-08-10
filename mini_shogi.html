@@ -74,8 +74,8 @@
      side is currently seated at the bottom of the screen gets the bottom-left
      spot; the other side (seated at the top, viewing everything upside down)
      gets its near-left, which on screen is the top-right corner. */
-  .undo-btn-seat-bottom-left{ top:auto; right:auto; bottom: clamp(60px, 18vh, 220px); left: 14px; transform:none; }
-  .undo-btn-seat-top-right{ bottom:auto; left:auto; top: clamp(60px, 18vh, 220px); right: 14px; transform: rotate(180deg); }
+  .undo-btn-seat-bottom-left{ top:auto; right:auto; bottom: clamp(20px, 8vh, 90px); left: 14px; transform:none; }
+  .undo-btn-seat-top-right{ bottom:auto; left:auto; top: clamp(20px, 8vh, 90px); right: 14px; transform: rotate(180deg); }
   .undo-btn-seat-top-right:hover:not(:disabled){ transform: rotate(180deg); }
 
   .confirm-overlay{
@@ -136,7 +136,7 @@
     color: var(--silver);
     display:flex;
     justify-content:center;
-    align-items:center;
+    align-items:stretch;
     padding: max(8px, env(safe-area-inset-top)) max(10px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(10px, env(safe-area-inset-left));
   }
 
@@ -183,9 +183,7 @@
     align-items:center;
     justify-content:center;
     min-height: 22px;
-    border-top: 1px solid var(--hairline);
-    border-bottom: 1px solid var(--hairline);
-    padding: 6px 18px;
+    padding: 4px 18px;
   }
   .status-text{
     font-size:0.72rem;
@@ -200,9 +198,9 @@
   .turn-edge-glow{
     position:fixed;
     left:0; right:0;
-    height: 6vh;
-    max-height: 60px;
-    min-height: 30px;
+    height: 9vh;
+    max-height: 90px;
+    min-height: 42px;
     pointer-events:none;
     z-index: 40;
     opacity:0;
@@ -210,27 +208,27 @@
   }
   .turn-edge-glow.top{
     top:0;
-    background: linear-gradient(to bottom, rgba(255,255,255,0.32), rgba(255,255,255,0));
+    background: linear-gradient(to bottom, rgba(255,255,255,0.55), rgba(255,255,255,0));
   }
   .turn-edge-glow.bottom{
     bottom:0;
-    background: linear-gradient(to top, rgba(255,255,255,0.32), rgba(255,255,255,0));
+    background: linear-gradient(to top, rgba(255,255,255,0.55), rgba(255,255,255,0));
   }
   .turn-edge-glow.active{
     opacity:1;
     animation: edgeGlowPulse 1.8s ease-in-out infinite;
   }
   @keyframes edgeGlowPulse{
-    0%,100%{ opacity:0.55; }
+    0%,100%{ opacity:0.75; }
     50%{ opacity:1; }
   }
   .turn-edge-glow.flash{
     animation: edgeGlowFlash .5s ease, edgeGlowPulse 1.8s ease-in-out .5s infinite;
   }
   @keyframes edgeGlowFlash{
-    0%{ opacity:0.15; }
+    0%{ opacity:0.3; }
     45%{ opacity:1; }
-    100%{ opacity:0.55; }
+    100%{ opacity:0.75; }
   }
 
   /* --- board row: opponent's tray above, your tray below the board --- */
@@ -307,12 +305,6 @@
   }
 
   .hidden{ display:none !important; }
-  .chrome-hidden{
-    opacity:0 !important;
-    visibility:hidden !important;
-    pointer-events:none !important;
-    transition: opacity .2s ease;
-  }
   .board{
     display:grid;
     grid-template-columns: repeat(3, 1fr);
@@ -609,8 +601,12 @@
     display:flex;
     flex-direction:column;
     align-items:center;
+    justify-content:center;
     gap:8px;
     width:100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    padding-bottom: 4vh;
   }
 </style>
 </head>
@@ -1483,7 +1479,7 @@
     document.getElementById('undoBtnGote').classList.add('hidden');
     document.getElementById('gameScreen').classList.add('hidden');
     document.getElementById('setupScreen').classList.remove('hidden');
-    document.querySelector('header').classList.remove('chrome-hidden');
+    document.querySelector('header').classList.remove('hidden');
   }
 
   document.getElementById('startGameBtn').addEventListener('click', () => {
@@ -1492,7 +1488,7 @@
     humanSide = setupHumanSide;
     document.getElementById('setupScreen').classList.add('hidden');
     document.getElementById('gameScreen').classList.remove('hidden');
-    document.querySelector('header').classList.add('chrome-hidden');
+    document.querySelector('header').classList.add('hidden');
     resetGame();
   });
 
