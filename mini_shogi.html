@@ -62,7 +62,7 @@
     color: #fff;
     background: rgba(255,255,255,0.14);
     border: 1px solid rgba(255,255,255,0.4);
-    border-radius: 3px;
+    border-radius: 10px;
     padding: 7px 14px;
     cursor:pointer;
     backdrop-filter: blur(4px);
@@ -70,9 +70,13 @@
   }
   .undo-btn:hover:not(:disabled){ background: rgba(255,255,255,0.24); color:#fff; border-color:#fff; }
   .undo-btn:disabled{ opacity:0.62; cursor:default; }
-  .undo-btn-sente{ top: 14px; right: 14px; }
-  .undo-btn-gote{ bottom: 14px; left: 14px; transform: rotate(180deg); }
-  .undo-btn-gote:hover:not(:disabled){ transform: rotate(180deg); }
+  /* Each player's own 待った button sits at their near-left corner. Whichever
+     side is currently seated at the bottom of the screen gets the bottom-left
+     spot; the other side (seated at the top, viewing everything upside down)
+     gets its near-left, which on screen is the top-right corner. */
+  .undo-btn-seat-bottom-left{ top:auto; right:auto; bottom: 14px; left: 14px; transform:none; }
+  .undo-btn-seat-top-right{ bottom:auto; left:auto; top: 14px; right: 14px; transform: rotate(180deg); }
+  .undo-btn-seat-top-right:hover:not(:disabled){ transform: rotate(180deg); }
 
   .confirm-overlay{
     position:fixed; inset:0;
@@ -105,21 +109,6 @@
   .confirm-card p{ color:var(--silver-dim); font-size:0.8rem; margin: 0 0 20px; letter-spacing:0.04em; line-height:1.7; }
   .confirm-row{ display:flex; gap:10px; justify-content:center; }
 
-  .mode-toggle-row{ display:flex; gap:8px; }
-  .mode-toggle-btn{
-    font-family:'Zen Kaku Gothic New', sans-serif;
-    font-weight:700;
-    font-size:0.68rem;
-    letter-spacing:0.06em;
-    color: var(--silver);
-    background: rgba(255,255,255,0.03);
-    border: 1px solid var(--silver-dim);
-    border-radius:3px;
-    padding: 6px 12px;
-    cursor:pointer;
-    transition: all .15s ease;
-  }
-  .mode-toggle-btn.active{ background:#fff; color:#141414; border-color:#fff; }
   .cpu-thinking{
     font-size:0.7rem;
     color: var(--silver-dim);
@@ -161,15 +150,9 @@
   }
   header{ order: -1; }
   #turnWrap{ order: 0; }
-  #goteKomadai{ order: 1; }
-  #boardFrame{ order: 2; }
-  #senteKomadai{ order: 3; }
-  #modeToggleRow{ order: 4; }
-  #sideToggleRow{ order: 5; }
-  #controlsWrap{ order: 6; }
-  #rules{ order: 7; }
-  .app.gote-tray-bottom #goteKomadai{ order: 3; }
-  .app.gote-tray-bottom #senteKomadai{ order: 1; }
+  #boardRow{ order: 1; }
+  #controlsWrap{ order: 2; }
+  #rules{ order: 3; }
 
   header{
     text-align:center;
@@ -194,40 +177,76 @@
     text-transform: uppercase;
   }
 
-  /* --- turn seal --- */
+  /* --- turn indicator: an edge glow now carries whose turn it is; this bar only shows contextual messages --- */
   .turn-wrap{
     display:flex;
     align-items:center;
-    gap:10px;
-    min-height: 34px;
+    justify-content:center;
+    min-height: 22px;
     border-top: 1px solid var(--hairline);
     border-bottom: 1px solid var(--hairline);
-    padding: 5px 18px;
-  }
-  .seal{
-    font-family:'Kaisei Decol', serif;
-    font-weight:500;
-    font-size: 0.9rem;
-    color: var(--ink);
-    background: var(--sente);
-    padding: 8px 18px;
-    border-radius: 3px;
-    box-shadow: 0 3px 0 rgba(0,0,0,0.4), 0 6px 10px rgba(0,0,0,0.4);
-    transition: background .25s ease, color .25s ease;
-    letter-spacing: 0.15em;
-  }
-  .seal.gote{ background: var(--gote); color: var(--ink-light); box-shadow: 0 3px 0 rgba(0,0,0,0.4), 0 6px 10px rgba(0,0,0,0.4), inset 0 0 0 1px var(--silver-dim); }
-  .seal.pulse{ animation: stamp .35s ease; }
-  @keyframes stamp{
-    0%{ transform: scale(1.4); opacity:0; }
-    60%{ transform: scale(0.96); opacity:1; }
-    100%{ transform: scale(1); }
+    padding: 6px 18px;
   }
   .status-text{
     font-size:0.72rem;
     color:var(--silver-dim);
     letter-spacing:0.05em;
+    text-align:center;
+    min-height: 1em;
   }
+
+  /* --- edge glow: top edge glows for the player whose zone is at the top of the screen,
+       bottom edge glows for whoever's zone is at the bottom --- */
+  .turn-edge-glow{
+    position:fixed;
+    left:0; right:0;
+    height: 6vh;
+    max-height: 60px;
+    min-height: 30px;
+    pointer-events:none;
+    z-index: 40;
+    opacity:0;
+    transition: opacity .35s ease;
+  }
+  .turn-edge-glow.top{
+    top:0;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.32), rgba(255,255,255,0));
+  }
+  .turn-edge-glow.bottom{
+    bottom:0;
+    background: linear-gradient(to top, rgba(255,255,255,0.32), rgba(255,255,255,0));
+  }
+  .turn-edge-glow.active{
+    opacity:1;
+    animation: edgeGlowPulse 1.8s ease-in-out infinite;
+  }
+  @keyframes edgeGlowPulse{
+    0%,100%{ opacity:0.55; }
+    50%{ opacity:1; }
+  }
+  .turn-edge-glow.flash{
+    animation: edgeGlowFlash .5s ease, edgeGlowPulse 1.8s ease-in-out .5s infinite;
+  }
+  @keyframes edgeGlowFlash{
+    0%{ opacity:0.15; }
+    45%{ opacity:1; }
+    100%{ opacity:0.55; }
+  }
+
+  /* --- board row: opponent's tray above, your tray below the board --- */
+  .board-row{
+    display:flex;
+    flex-direction: column;
+    align-items:center;
+    justify-content:center;
+    gap: 6px;
+    width:100%;
+  }
+  #goteKomadai{ order: 1; }
+  #boardFrame{ order: 2; }
+  #senteKomadai{ order: 3; }
+  .board-row.swap-trays #goteKomadai{ order: 3; }
+  .board-row.swap-trays #senteKomadai{ order: 1; }
 
   /* --- komadai (captured pieces trays) --- */
   .komadai{
@@ -269,7 +288,7 @@
     display:flex; align-items:center; justify-content:center;
     box-shadow: 0 1px 2px rgba(0,0,0,0.6);
   }
-  .komadai.empty-hint{ color:var(--silver-dim); font-size:0.7rem; padding-left:14px; }
+  .komadai .empty-hint{ color:var(--silver-dim); font-size:0.7rem; padding-left:14px; }
 
   .komadai-flipped{ transform: rotate(180deg); }
   .board-frame.flipped{ transform: rotate(180deg); }
@@ -517,145 +536,150 @@
     margin-bottom: 18px;
   }
 
-  /* --- start screen (mode selection before entering the game) --- */
-  .start-overlay{
-    position:fixed; inset:0;
-    background:
-      radial-gradient(ellipse at 50% -10%, #1c1c1c 0%, #0a0a0a 55%, #000000 100%);
-    display:none;
-    align-items:center; justify-content:center;
-    z-index: 150;
-    padding: 20px;
-  }
-  .start-overlay.show{ display:flex; }
-  .start-card{
+  /* --- setup screen (mode selection, matched 1:1 to the Connect Four picker) --- */
+  .setup-screen{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
     width:100%;
-    max-width: 340px;
-    background: linear-gradient(180deg, var(--paper), var(--paper-deep));
+  }
+  .setup-card{
+    width:100%;
+    max-width: 380px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:16px;
+    background: rgba(255,255,255,0.03);
     border: 1px solid var(--hairline);
-    border-radius: 5px;
-    padding: 30px 26px 26px;
-    box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.06);
-    text-align:center;
+    border-radius: 8px;
+    padding: 26px 22px;
+    margin-top: 20px;
   }
-  .start-card h1{
-    font-size: 1.5rem;
+  .setup-title{
+    font-family:'Kaisei Decol', serif;
+    font-weight:500;
+    font-size:0.95rem;
+    letter-spacing:0.1em;
+    color:#fff;
   }
-  .start-card .start-tagline{
-    font-size:0.68rem;
-    letter-spacing:0.12em;
-    color: var(--silver-dim);
-    margin: 14px 0 22px;
-    padding-top: 14px;
-    border-top: 1px solid var(--hairline);
-  }
-  .start-mode-list{
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-  }
-  .start-mode-btn{
-    display:flex;
-    flex-direction:column;
-    align-items:flex-start;
-    gap:2px;
+  .mode-toggle-row{ display:flex; gap:8px; }
+  #modeToggleRow{
+    flex-direction: column;
     width:100%;
-    text-align:left;
+  }
+  #modeToggleRow .mode-toggle-btn{
+    width:100%;
+    padding: 12px 16px;
+    font-size:0.78rem;
+  }
+  .mode-toggle-subrow{
+    display:flex;
+    gap:8px;
+    width:100%;
+  }
+  .mode-toggle-subrow .mode-toggle-btn{
+    width:auto;
+    flex:1;
+  }
+  .mode-toggle-btn{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:0.68rem;
+    letter-spacing:0.06em;
+    color: var(--silver);
     background: rgba(255,255,255,0.03);
     border: 1px solid var(--silver-dim);
-    border-radius: 3px;
-    padding: 12px 16px;
+    border-radius:3px;
+    padding: 6px 12px;
     cursor:pointer;
-    transition: background .15s ease, border-color .15s ease, transform .1s ease;
+    transition: all .15s ease;
   }
-  .start-mode-btn:hover{ background: rgba(255,255,255,0.08); border-color:#fff; }
-  .start-mode-btn:active{ transform: translateY(1px); }
-  .start-mode-btn .mode-label{
-    font-family:'Kaisei Decol', serif;
-    font-weight:700;
-    font-size:0.95rem;
-    color:#fff;
-    letter-spacing:0.08em;
+  .mode-toggle-btn.active{ background:#fff; color:#141414; border-color:#fff; }
+  .start-btn{
+    width:100%;
+    padding: 12px 16px;
+    font-size:0.8rem;
+    background:#fff;
+    color:#141414;
+    border-color:#fff;
   }
-  .start-mode-btn .mode-desc{
-    font-size:0.66rem;
-    color:var(--silver-dim);
-    letter-spacing:0.04em;
+  .start-btn:hover{ background:#eee; border-color:#eee; }
+  .game-screen{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    width:100%;
   }
 </style>
 </head>
 <body>
 <a href="index.html" class="home-btn" aria-label="ホームへ戻る">← ホーム</a>
-<button class="undo-btn undo-btn-sente" id="undoBtn" disabled>待った</button>
-<button class="undo-btn undo-btn-gote" id="undoBtnGote" disabled>待った</button>
-<div id="startScreen" class="start-overlay show">
-  <div class="start-card">
-    <h1>三ノ将棋<span class="small">MINI SHOGI · 3 × 4</span></h1>
-    <div class="start-tagline">対局モードを選んでください</div>
-    <div class="start-mode-list">
-      <button class="start-mode-btn" id="startTwoPlayerBtn">
-        <span class="mode-label">2人対戦</span>
-        <span class="mode-desc">同じ端末で交互に指します</span>
-      </button>
-      <button class="start-mode-btn" id="startCPUBtn">
-        <span class="mode-label">CPU対戦</span>
-        <span class="mode-desc">標準の強さのCPUと対局</span>
-      </button>
-      <button class="start-mode-btn" id="startCPUMasterBtn">
-        <span class="mode-label">達人CPU</span>
-        <span class="mode-desc">より深く読む強めのCPUと対局</span>
-      </button>
-    </div>
-  </div>
-</div>
-
+<button class="undo-btn hidden" id="undoBtn" disabled>待った</button>
+<button class="undo-btn hidden" id="undoBtnGote" disabled>待った</button>
+<div id="turnGlowTop" class="turn-edge-glow top"></div>
+<div id="turnGlowBottom" class="turn-edge-glow bottom"></div>
 <div class="app">
 
   <header>
     <h1>三ノ将棋<span class="small">MINI SHOGI · 3 × 4</span></h1>
   </header>
 
-  <div class="turn-wrap" id="turnWrap">
-    <div id="seal" class="seal">先手 の番</div>
-    <div id="statusText" class="status-text"></div>
+  <div id="setupScreen" class="setup-screen">
+    <div class="setup-card">
+      <div class="setup-title">対戦モードを選ぶ</div>
+      <div class="mode-toggle-row" id="modeToggleRow">
+        <button class="mode-toggle-btn active" id="modeTwoPlayerBtn">2人対戦</button>
+        <div class="mode-toggle-subrow">
+          <button class="mode-toggle-btn" id="modeCPUBtn">CPU対戦</button>
+          <button class="mode-toggle-btn" id="modeCPUMasterBtn">達人CPU</button>
+        </div>
+      </div>
+      <div class="mode-toggle-row hidden" id="sideToggleRow">
+        <button class="mode-toggle-btn active" id="sideSenteBtn">先手で対戦</button>
+        <button class="mode-toggle-btn" id="sideGoteBtn">後手で対戦</button>
+      </div>
+      <button id="startGameBtn" class="start-btn">はじめる</button>
+    </div>
   </div>
 
-  <div id="goteKomadai" class="komadai"></div>
+  <div id="gameScreen" class="game-screen hidden">
 
-  <div class="board-frame" id="boardFrame">
-    <div id="board" class="board" role="grid" aria-label="将棋盤"></div>
-  </div>
+    <div class="turn-wrap" id="turnWrap">
+      <div id="statusText" class="status-text"></div>
+    </div>
 
-  <div id="senteKomadai" class="komadai"></div>
+    <div class="board-row" id="boardRow">
+      <div id="goteKomadai" class="komadai"></div>
 
-  <div class="mode-toggle-row" id="modeToggleRow">
-    <button class="mode-toggle-btn active" id="modeTwoPlayerBtn">2人対戦</button>
-    <button class="mode-toggle-btn" id="modeCPUBtn">CPU対戦</button>
-    <button class="mode-toggle-btn" id="modeCPUMasterBtn">達人CPU</button>
-  </div>
+      <div class="board-frame" id="boardFrame">
+        <div id="board" class="board" role="grid" aria-label="将棋盤"></div>
+      </div>
 
-  <div class="mode-toggle-row hidden" id="sideToggleRow">
-    <button class="mode-toggle-btn active" id="sideSenteBtn">先手で対戦</button>
-    <button class="mode-toggle-btn" id="sideGoteBtn">後手で対戦</button>
-  </div>
+      <div id="senteKomadai" class="komadai"></div>
+    </div>
 
-  <div class="controls" id="controlsWrap">
-    <button id="newGameBtn">はじめから</button>
-    <button id="rulesBtn" class="ghost">遊び方</button>
-  </div>
+    <div class="controls" id="controlsWrap">
+      <button id="newGameBtn">はじめから</button>
+      <button id="rulesBtn" class="ghost">遊び方</button>
+      <button id="changeModeBtn" class="ghost">モード変更</button>
+    </div>
 
-  <div id="rules" class="rules">
-    <h2>遊び方</h2>
-    <ul>
-      <li><b>王</b>：全方向に1マス</li>
-      <li><b>金</b>：前後左右と斜め前に1マス（斜め後ろは進めない）</li>
-      <li><b>銀</b>：前と斜め4方向に1マス（左右・真後ろは進めない）</li>
-      <li><b>歩</b>：前に1マスのみ。敵陣（一番奥の列）に入ると自動で成る</li>
-      <li>成った歩は「と」、成った銀は「全」となり、金と同じ動き</li>
-      <li>相手の駒を取ると持ち駒になり、自分の番に空きマスへ打てる（1手消費）</li>
-      <li>歩は同じ列に自分の歩がある時は打てない、また敵陣の最終列にも打てない</li>
-      <li><b>相手の「王」を取ったら勝利</b>（詰みの判定はなし）</li>
-    </ul>
+    <div id="rules" class="rules">
+      <h2>遊び方</h2>
+      <ul>
+        <li><b>王</b>：全方向に1マス</li>
+        <li><b>金</b>：前後左右と斜め前に1マス（斜め後ろは進めない）</li>
+        <li><b>銀</b>：前と斜め4方向に1マス（左右・真後ろは進めない）</li>
+        <li><b>歩</b>：前に1マスのみ。敵陣（一番奥の列）に入ると自動で成る</li>
+        <li>成った歩は「と」、成った銀は「全」となり、金と同じ動き</li>
+        <li>相手の駒を取ると持ち駒になり、自分の番に空きマスへ打てる（1手消費）</li>
+        <li>歩は同じ列に自分の歩がある時は打てない、また敵陣の最終列にも打てない</li>
+        <li><b>相手の「王」を取ったら勝利</b>（詰みの判定はなし）</li>
+      </ul>
+    </div>
+
   </div>
 
 </div>
@@ -671,13 +695,13 @@
 
 <div id="checkPopup" class="check-popup">王手！</div>
 
-<div id="newGameConfirmOverlay" class="confirm-overlay">
+<div id="confirmOverlay" class="confirm-overlay">
   <div class="confirm-card">
-    <div class="big">はじめから</div>
-    <p>現在の対局を中断してやり直します。よろしいですか？</p>
+    <div class="big" id="confirmTitle">はじめから</div>
+    <p id="confirmText">現在の対局を中断してやり直します。よろしいですか？</p>
     <div class="confirm-row">
-      <button id="newGameConfirmYesBtn">はい</button>
-      <button id="newGameConfirmNoBtn">いいえ</button>
+      <button id="confirmYesBtn">はい</button>
+      <button id="confirmNoBtn">いいえ</button>
     </div>
   </div>
 </div>
@@ -733,26 +757,6 @@
     return humanSide === 'sente' ? 'gote' : 'sente';
   }
 
-  function updateChromeVisibility(){
-    const started = moveHistory.length > 0;
-    const header = document.querySelector('header');
-    const modeRow = document.getElementById('modeToggleRow');
-    const sideRow = document.getElementById('sideToggleRow');
-
-    header.classList.toggle('chrome-hidden', started);
-    modeRow.classList.toggle('chrome-hidden', started);
-
-    if(!vsCPU){
-      sideRow.classList.remove('chrome-hidden');
-      sideRow.classList.add('hidden');
-    } else if(started){
-      sideRow.classList.remove('hidden');
-      sideRow.classList.add('chrome-hidden');
-    } else {
-      sideRow.classList.remove('hidden', 'chrome-hidden');
-    }
-  }
-
   function resetGame(){
     board = initialBoard();
     hands = { sente: {}, gote: {} };
@@ -768,10 +772,10 @@
     document.getElementById('winnerOverlay').classList.remove('show');
 
     document.getElementById('boardFrame').classList.toggle('flipped', vsCPU && humanSide === 'gote');
-    document.querySelector('.app').classList.toggle('gote-tray-bottom', vsCPU && humanSide === 'gote');
+    document.getElementById('boardRow').classList.toggle('swap-trays', vsCPU && humanSide === 'gote');
     document.getElementById('undoBtn').classList.toggle('hidden', cpuSide() === 'sente');
     document.getElementById('undoBtnGote').classList.toggle('hidden', cpuSide() === 'gote');
-    updateChromeVisibility();
+    updateUndoButtonSeats();
 
     updateUndoButton();
     render();
@@ -793,7 +797,6 @@
     undoBlocked = false;
     undoUseCount = 0;
     updateUndoButton();
-    updateChromeVisibility();
   }
 
   function updateUndoButton(){
@@ -817,7 +820,6 @@
     undoBlocked = false;
     document.getElementById('winnerOverlay').classList.remove('show');
     updateUndoButton();
-    updateChromeVisibility();
     render();
   }
 
@@ -1384,79 +1386,157 @@
     renderKomadai('sente');
     renderKomadai('gote');
 
-    const seal = document.getElementById('seal');
-    seal.textContent = (turn === 'sente' ? '先手' : '後手') + ' の番';
-    seal.className = 'seal' + (turn === 'gote' ? ' gote' : '');
-    if(pulse){
-      void seal.offsetWidth;
-      seal.classList.add('pulse');
-    }
+    updateTurnEdgeGlow(pulse);
 
     const status = document.getElementById('statusText');
     const turnInCheck = (turn === 'sente' && senteInCheck) || (turn === 'gote' && goteInCheck);
     const checkPrefix = turnInCheck ? '王手！ ' : '';
     if(gameOver){
-      status.textContent = '対局終了';
+      status.textContent = '';
     } else if(selectedDrop){
       status.textContent = checkPrefix + KANJI[selectedDrop] + ' を打つマスを選んでください';
     } else if(selected){
       status.textContent = checkPrefix + '移動先のマスを選んでください';
+    } else if(turnInCheck){
+      status.textContent = checkPrefix;
     } else {
-      status.textContent = checkPrefix + '駒か持駒を選んでください';
+      status.textContent = '';
     }
   }
 
-  function setMode(newVsCPU, newDifficulty){
-    if(vsCPU === newVsCPU && cpuDifficulty === newDifficulty) return;
-    vsCPU = newVsCPU;
-    cpuDifficulty = newDifficulty;
-    document.getElementById('modeTwoPlayerBtn').classList.toggle('active', !vsCPU);
-    document.getElementById('modeCPUBtn').classList.toggle('active', vsCPU && cpuDifficulty === 'normal');
-    document.getElementById('modeCPUMasterBtn').classList.toggle('active', vsCPU && cpuDifficulty === 'master');
-    resetGame();
+  // Whichever player's zone currently sits at the bottom of the screen (the
+  // comfortable/near side) gets the bottom glow and the bottom-left 待った
+  // button; the other gets the top glow and the top-right button. This tracks
+  // the same top/bottom tray swap used for CPU-as-gote games.
+  function isTurnAtBottom(owner){
+    const swapped = vsCPU && humanSide === 'gote';
+    return swapped ? owner === 'gote' : owner === 'sente';
   }
 
-  document.getElementById('modeTwoPlayerBtn').addEventListener('click', () => setMode(false, 'normal'));
-  document.getElementById('modeCPUBtn').addEventListener('click', () => setMode(true, 'normal'));
-  document.getElementById('modeCPUMasterBtn').addEventListener('click', () => setMode(true, 'master'));
-
-  function chooseStartMode(newVsCPU, newDifficulty){
-    setMode(newVsCPU, newDifficulty);
-    document.getElementById('startScreen').classList.remove('show');
+  function updateUndoButtonSeats(){
+    const senteBtn = document.getElementById('undoBtn');
+    const goteBtn = document.getElementById('undoBtnGote');
+    const senteAtBottom = isTurnAtBottom('sente');
+    senteBtn.classList.toggle('undo-btn-seat-bottom-left', senteAtBottom);
+    senteBtn.classList.toggle('undo-btn-seat-top-right', !senteAtBottom);
+    goteBtn.classList.toggle('undo-btn-seat-bottom-left', !senteAtBottom);
+    goteBtn.classList.toggle('undo-btn-seat-top-right', senteAtBottom);
   }
-  document.getElementById('startTwoPlayerBtn').addEventListener('click', () => chooseStartMode(false, 'normal'));
-  document.getElementById('startCPUBtn').addEventListener('click', () => chooseStartMode(true, 'normal'));
-  document.getElementById('startCPUMasterBtn').addEventListener('click', () => chooseStartMode(true, 'master'));
 
+  function updateTurnEdgeGlow(pulse){
+    const top = document.getElementById('turnGlowTop');
+    const bottom = document.getElementById('turnGlowBottom');
+    if(gameOver){
+      top.classList.remove('active', 'flash');
+      bottom.classList.remove('active', 'flash');
+      return;
+    }
+    const atBottom = isTurnAtBottom(turn);
+    const activeEl = atBottom ? bottom : top;
+    const inactiveEl = atBottom ? top : bottom;
+    inactiveEl.classList.remove('active', 'flash');
+    activeEl.classList.add('active');
+    if(pulse){
+      activeEl.classList.remove('flash');
+      void activeEl.offsetWidth;
+      activeEl.classList.add('flash');
+    }
+  }
+
+  // --- Setup screen: toggle the mode/side like the Connect Four picker, then commit with はじめる ---
+  let setupVsCPU = false;
+  let setupCpuDifficulty = 'normal';
+  let setupHumanSide = 'sente';
+
+  function updateSetupUI(){
+    document.getElementById('modeTwoPlayerBtn').classList.toggle('active', !setupVsCPU);
+    document.getElementById('modeCPUBtn').classList.toggle('active', setupVsCPU && setupCpuDifficulty === 'normal');
+    document.getElementById('modeCPUMasterBtn').classList.toggle('active', setupVsCPU && setupCpuDifficulty === 'master');
+    document.getElementById('sideToggleRow').classList.toggle('hidden', !setupVsCPU);
+    document.getElementById('sideSenteBtn').classList.toggle('active', setupHumanSide === 'sente');
+    document.getElementById('sideGoteBtn').classList.toggle('active', setupHumanSide === 'gote');
+  }
+
+  document.getElementById('modeTwoPlayerBtn').addEventListener('click', () => {
+    setupVsCPU = false;
+    setupCpuDifficulty = 'normal';
+    updateSetupUI();
+  });
+  document.getElementById('modeCPUBtn').addEventListener('click', () => {
+    setupVsCPU = true;
+    setupCpuDifficulty = 'normal';
+    updateSetupUI();
+  });
+  document.getElementById('modeCPUMasterBtn').addEventListener('click', () => {
+    setupVsCPU = true;
+    setupCpuDifficulty = 'master';
+    updateSetupUI();
+  });
   document.getElementById('sideSenteBtn').addEventListener('click', () => {
-    if(humanSide === 'sente') return;
-    humanSide = 'sente';
-    document.getElementById('sideSenteBtn').classList.add('active');
-    document.getElementById('sideGoteBtn').classList.remove('active');
-    resetGame();
+    setupHumanSide = 'sente';
+    updateSetupUI();
   });
   document.getElementById('sideGoteBtn').addEventListener('click', () => {
-    if(humanSide === 'gote') return;
-    humanSide = 'gote';
-    document.getElementById('sideGoteBtn').classList.add('active');
-    document.getElementById('sideSenteBtn').classList.remove('active');
+    setupHumanSide = 'gote';
+    updateSetupUI();
+  });
+
+  function openSetupScreen(){
+    // Reflect whatever mode/side is currently active so the toggle buttons
+    // pick up right where the last game left off.
+    setupVsCPU = vsCPU;
+    setupCpuDifficulty = cpuDifficulty;
+    setupHumanSide = humanSide;
+    updateSetupUI();
+    document.getElementById('undoBtn').classList.add('hidden');
+    document.getElementById('undoBtnGote').classList.add('hidden');
+    document.getElementById('gameScreen').classList.add('hidden');
+    document.getElementById('setupScreen').classList.remove('hidden');
+    document.querySelector('header').classList.remove('chrome-hidden');
+  }
+
+  document.getElementById('startGameBtn').addEventListener('click', () => {
+    vsCPU = setupVsCPU;
+    cpuDifficulty = setupCpuDifficulty;
+    humanSide = setupHumanSide;
+    document.getElementById('setupScreen').classList.add('hidden');
+    document.getElementById('gameScreen').classList.remove('hidden');
+    document.querySelector('header').classList.add('chrome-hidden');
     resetGame();
+  });
+
+  document.getElementById('changeModeBtn').addEventListener('click', () => {
+    runOrConfirm(openSetupScreen, 'モード変更', '現在の対局を中断してモードを選び直します。よろしいですか？');
+  });
+
+  // --- Generic confirm-before-interrupting-the-game modal, shared by はじめから and モード変更 ---
+  let pendingConfirmAction = null;
+
+  function runOrConfirm(action, title, message){
+    if(moveHistory.length === 0){
+      // Nothing to lose yet, so just proceed without asking.
+      action();
+      return;
+    }
+    pendingConfirmAction = action;
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmText').textContent = message;
+    document.getElementById('confirmOverlay').classList.add('show');
+  }
+
+  document.getElementById('confirmYesBtn').addEventListener('click', () => {
+    document.getElementById('confirmOverlay').classList.remove('show');
+    const action = pendingConfirmAction;
+    pendingConfirmAction = null;
+    if(action) action();
+  });
+  document.getElementById('confirmNoBtn').addEventListener('click', () => {
+    document.getElementById('confirmOverlay').classList.remove('show');
+    pendingConfirmAction = null;
   });
 
   document.getElementById('newGameBtn').addEventListener('click', () => {
-    if(moveHistory.length === 0){
-      // Nothing to lose yet, so just start fresh without asking.
-      resetGame();
-      return;
-    }
-    document.getElementById('newGameConfirmOverlay').classList.add('show');
-  });
-  document.getElementById('newGameConfirmYesBtn').addEventListener('click', () => {
-    document.getElementById('newGameConfirmOverlay').classList.remove('show');
-    resetGame();
-  });
-  document.getElementById('newGameConfirmNoBtn').addEventListener('click', () => {
-    document.getElementById('newGameConfirmOverlay').classList.remove('show');
+    runOrConfirm(resetGame, 'はじめから', '現在の対局を中断してやり直します。よろしいですか？');
   });
   document.getElementById('againBtn').addEventListener('click', resetGame);
   document.getElementById('rulesBtn').addEventListener('click', () => {
@@ -1503,8 +1583,6 @@
     }
     updateUndoButton();
   });
-
-  resetGame();
 })();
 </script>
 </body>
