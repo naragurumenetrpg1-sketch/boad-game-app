@@ -565,7 +565,7 @@
 <body>
 
 <div id="opening">
-  <video id="openingVideo" autoplay muted playsinline webkit-playsinline>
+  <video id="openingVideo" autoplay muted playsinline>
     <source src="opening.mp4" type="video/mp4">
   </video>
 </div>
@@ -918,35 +918,10 @@
   startScreen.style.display = "flex";
 }
 
-  // 動画が正しく再生できた場合は、再生終了で次へ進む
   openingVideo.addEventListener("ended", showStartScreen);
-
-  // 動画の読み込み・再生に失敗した場合（ファイルが無い／自動再生がブロックされた等）は、
-  // 再生マークが出たまま固まらないよう、自動的にスタート画面へフォールバックする
-  let openingAdvanced = false;
-  function fallbackPastOpening(){
-    if(openingAdvanced) return;
-    openingAdvanced = true;
-    showStartScreen();
-  }
-  openingVideo.addEventListener("error", fallbackPastOpening);
-
-  // autoplay 属性だけに頼らず、明示的に play() を呼んで失敗を検知する
-  const playPromise = openingVideo.play();
-  if(playPromise && typeof playPromise.catch === "function"){
-    playPromise.catch(fallbackPastOpening);
-  }
-
-  // 上記のどちらも発火しない環境向けの保険（一定時間たっても動画が動いていなければスキップ）
-  setTimeout(() => {
-    if(!openingAdvanced && openingVideo.paused){
-      fallbackPastOpening();
-    }
-  }, 2500);
 
   opening.addEventListener("click", () => {
     openingVideo.pause();
-    openingAdvanced = true;
     showStartScreen();
   });
 
