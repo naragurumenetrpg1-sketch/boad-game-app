@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>三ノ将棋 — ミニ将棋 3×4</title>
+<title>三ノ将棋 — 5五将棋</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Kaisei+Decol:wght@400;500;700&family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap');
 
@@ -355,10 +355,10 @@
   .hidden{ display:none !important; }
   .board{
     display:grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(4, 1fr);
-    width: min(260px, 62vw);
-    height: calc(min(260px, 62vw) * 4 / 3);
+    grid-template-columns: repeat(5, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    width: min(340px, 82vw);
+    height: min(340px, 82vw);
     border: 1px solid var(--grid-line);
     box-shadow: inset 0 0 0 1px rgba(0,0,0,0.5);
   }
@@ -529,7 +529,7 @@
   .koma.promoted{ box-shadow: 0 3px 4px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.7), inset 0 -2px 3px rgba(0,0,0,0.15), 0 0 0 2px var(--silver); }
   .koma.gote-side.promoted{ box-shadow: 0 3px 4px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.12), inset 0 -2px 3px rgba(0,0,0,0.4), 0 0 0 2px var(--silver); }
   .koma.king .kanji{ font-weight:800; }
-  .cell .koma{ font-size: clamp(1.1rem, 6vw, 1.5rem); }
+  .cell .koma{ font-size: clamp(0.85rem, 4.6vw, 1.15rem); }
 
   /* --- controls --- */
   .controls{
@@ -684,21 +684,19 @@
     transition: all .15s ease;
   }
   .mode-toggle-btn.active{ background:#fff; color:#141414; border-color:#fff; }
-  .mode-toggle-btn-oni{
-    color: #d99a9a;
-    border-color: rgba(178,42,42,0.55);
-  }
   .mode-toggle-btn-oni.active{
     background: #7a1f1f;
     color: #ffe9e9;
     border-color: #b23a3a;
   }
   .oni-hint{
+    display: none;
     font-size:0.62rem;
     color: #d99a9a;
     letter-spacing:0.04em;
     text-align:center;
   }
+  .oni-hint.show{ display: block; }
   .start-btn{
     width:100%;
     padding: 12px 16px;
@@ -738,7 +736,7 @@
 <div class="app">
 
   <header>
-    <h1>三ノ将棋<span class="small">MINI SHOGI · 3 × 4</span></h1>
+    <h1>三ノ将棋<span class="small">MINISHOGI · 5 × 5</span></h1>
   </header>
 
   <div id="setupScreen" class="setup-screen">
@@ -750,7 +748,7 @@
           <button class="mode-toggle-btn" id="modeCPUBtn">CPU対戦</button>
           <button class="mode-toggle-btn" id="modeCPUMasterBtn">達人CPU</button>
         </div>
-        <button class="mode-toggle-btn mode-toggle-btn-oni" id="modeCPUOniBtn">鬼</button>
+        <button class="mode-toggle-btn mode-toggle-btn-oni" id="modeCPUOniBtn">鬼CPU</button>
         <div class="oni-hint" id="oniHint">待った禁止・持ち時間20秒</div>
       </div>
       <div class="mode-toggle-row hidden" id="sideToggleRow">
@@ -789,11 +787,16 @@
         <li><b>王</b>：全方向に1マス</li>
         <li><b>金</b>：前後左右と斜め前に1マス（斜め後ろは進めない）</li>
         <li><b>銀</b>：前と斜め4方向に1マス（左右・真後ろは進めない）</li>
-        <li><b>歩</b>：前に1マスのみ。敵陣（一番奥の列）に入ると自動で成る</li>
-        <li>成った歩は「と」、成った銀は「全」となり、金と同じ動き</li>
+        <li><b>角</b>：斜め4方向にどこまでも（成ると「馬」になり、上下左右にも1マス動ける）</li>
+        <li><b>飛</b>：上下左右にどこまでも（成ると「龍」になり、斜め4方向にも1マス動ける）</li>
+        <li><b>歩</b>：前に1マスのみ</li>
+        <li>敵陣（一番奥の列）に入る・出るときに成るかどうかを選べる（歩が最終列に進む時のみ、成りが必須）</li>
         <li>相手の駒を取ると持ち駒になり、自分の番に空きマスへ打てる（1手消費）</li>
-        <li>歩は同じ列に自分の歩がある時は打てない、また敵陣の最終列にも打てない</li>
-        <li><b>相手の「王」を取ったら勝利</b>（詰みの判定はなし）</li>
+        <li>歩は同じ列に自分の歩がある時は打てない（二歩）、敵陣の最終列にも打てない</li>
+        <li>自分の王が王手されたままになる手は指せない（王手放置反則）</li>
+        <li>打った歩で相手を詰ませることはできない（打ち歩詰め）</li>
+        <li>同一局面が4回現れたら千日手となり、先手の負け（連続王手による場合はその手を選べない）</li>
+        <li><b>相手の「王」を詰ませたら勝利</b></li>
       </ul>
     </div>
 
@@ -803,7 +806,7 @@
 
 <div id="winnerOverlay" class="winner-overlay">
   <div class="winner-card">
-    <div class="winner-perspective rotated">
+    <div class="winner-perspective" id="winnerPerspectiveTop">
       <div id="winnerTextTop" class="big">あなたの勝ち！</div>
     </div>
     <p id="winnerReason">王を討ち取りました</p>
@@ -815,6 +818,17 @@
 </div>
 
 <div id="checkPopup" class="check-popup">王手！</div>
+
+<div id="promotionOverlay" class="confirm-overlay">
+  <div class="confirm-card" id="promotionCard">
+    <div class="big">成りますか？</div>
+    <p>敵陣に入りました。成ると駒の動きが変わります。</p>
+    <div class="confirm-row">
+      <button id="promoteYesBtn">成る</button>
+      <button id="promoteNoBtn">成らない</button>
+    </div>
+  </div>
+</div>
 <div id="modeStampPopup" class="check-popup mode-stamp"></div>
 <div id="turnTimerBadge" class="turn-timer-badge"></div>
 
@@ -842,12 +856,15 @@
 
 <script>
 (function(){
-  const ROWS = 4, COLS = 3;
-  const KANJI = { king:'王', gold:'金', silver:'銀', pawn:'歩', tokin:'と', narigin:'全' };
-  const PROMOTED = { pawn:'tokin', silver:'narigin' };
+  const ROWS = 5, COLS = 5;
+  const KANJI = { king:'王', gold:'金', silver:'銀', bishop:'角', rook:'飛', pawn:'歩', tokin:'と', narigin:'全', uma:'馬', ryu:'龍' };
+  const PROMOTED = { pawn:'tokin', silver:'narigin', bishop:'uma', rook:'ryu' };
+  const DEMOTED = { tokin:'pawn', narigin:'silver', uma:'bishop', ryu:'rook' };
 
   let board, hands, turn, selected, selectedDrop, gameOver;
   let moveHistory = [];
+  let positionHistory = new Map(); // 千日手 (repetition) tracking
+  let pendingPromotionMove = null;
   let rejectionCount = 0;
   let undoBlocked = false;
   let undoUseCount = 0;
@@ -875,24 +892,27 @@
 
   function totalUndoLimitForMode(){
     if(cpuDifficulty === 'oni') return 0;
-    if(cpuDifficulty === 'master') return 5;
+    if(cpuDifficulty === 'master') return 7;
     return Infinity;
   }
 
+  // Standard 5五将棋 (minishogi) starting position — 180°-rotationally symmetric:
+  //   gote:  飛 角 銀 金 王  (row 0)         .  .  .  .  歩  (row 1)
+  //   sente: 王 金 銀 角 飛  (row ROWS-1)    歩  .  .  .  .  (row ROWS-2)
   function initialBoard(){
     const b = Array.from({length:ROWS}, () => Array(COLS).fill(null));
-    b[0][0] = {owner:'gote', type:'silver'};
-    b[0][1] = {owner:'gote', type:'king'};
-    b[0][2] = {owner:'gote', type:'gold'};
-    b[1][0] = {owner:'gote', type:'pawn'};
-    b[1][1] = {owner:'gote', type:'pawn'};
-    b[1][2] = {owner:'gote', type:'pawn'};
-    b[2][0] = {owner:'sente', type:'pawn'};
-    b[2][1] = {owner:'sente', type:'pawn'};
-    b[2][2] = {owner:'sente', type:'pawn'};
-    b[3][0] = {owner:'sente', type:'gold'};
-    b[3][1] = {owner:'sente', type:'king'};
-    b[3][2] = {owner:'sente', type:'silver'};
+    b[0][0] = {owner:'gote', type:'rook'};
+    b[0][1] = {owner:'gote', type:'bishop'};
+    b[0][2] = {owner:'gote', type:'silver'};
+    b[0][3] = {owner:'gote', type:'gold'};
+    b[0][4] = {owner:'gote', type:'king'};
+    b[1][4] = {owner:'gote', type:'pawn'};
+    b[ROWS-1][0] = {owner:'sente', type:'king'};
+    b[ROWS-1][1] = {owner:'sente', type:'gold'};
+    b[ROWS-1][2] = {owner:'sente', type:'silver'};
+    b[ROWS-1][3] = {owner:'sente', type:'bishop'};
+    b[ROWS-1][4] = {owner:'sente', type:'rook'};
+    b[ROWS-2][0] = {owner:'sente', type:'pawn'};
     return b;
   }
 
@@ -909,12 +929,15 @@
     selectedDrop = null;
     gameOver = false;
     moveHistory = [];
+    positionHistory = new Map();
+    pendingPromotionMove = null;
     rejectionCount = 0;
     undoBlocked = false;
     undoUseCount = 0;
     totalUndoUsedThisGame = 0;
     cpuMovesMade = 0;
     document.getElementById('winnerOverlay').classList.remove('show');
+    document.getElementById('promotionOverlay').classList.remove('show');
 
     document.getElementById('boardFrame').classList.toggle('flipped', vsCPU && humanSide === 'gote');
     document.getElementById('boardRow').classList.toggle('swap-trays', vsCPU && humanSide === 'gote');
@@ -923,6 +946,7 @@
     updateUndoButtonSeats();
 
     updateUndoButton();
+    recordPosition();
     render();
 
     if(vsCPU && cpuSide() === 'sente' && !gameOver){
@@ -938,6 +962,7 @@
       board: JSON.parse(JSON.stringify(board)),
       hands: JSON.parse(JSON.stringify(hands)),
       turn: turn,
+      positionHistory: new Map(positionHistory),
     });
     rejectionCount = 0;
     undoBlocked = false;
@@ -946,7 +971,7 @@
   }
 
   function updateUndoButton(){
-    const disabled = moveHistory.length === 0 || undoBlocked || undoUseCount >= 2;
+    const disabled = moveHistory.length === 0 || undoBlocked || undoUseCount >= 5;
     const btn = document.getElementById('undoBtn');
     const btnGote = document.getElementById('undoBtnGote');
     if(btn) btn.disabled = disabled;
@@ -959,6 +984,7 @@
     board = snap.board;
     hands = snap.hands;
     turn = snap.turn;
+    positionHistory = snap.positionHistory;
     selected = null;
     selectedDrop = null;
     gameOver = false;
@@ -970,7 +996,12 @@
     startTurnTimerIfNeeded();
   }
 
-  function moveOffsets(type, owner){
+  function inBounds(r,c){ return r>=0 && r<ROWS && c>=0 && c<COLS; }
+
+  // Single-step offsets. 王/金/成銀/と/歩/銀 keep their classic shogi moves;
+  // 馬(uma)/龍(ryu) add the one-square moves their promotion grants on top
+  // of the bishop/rook slide they already have.
+  function stepOffsets(type, owner){
     const fwd = owner === 'sente' ? -1 : 1;
     if(type === 'king'){
       const out = [];
@@ -986,27 +1017,45 @@
     if(type === 'pawn'){
       return [[fwd,0]];
     }
+    if(type === 'uma'){ return [[-1,0],[1,0],[0,-1],[0,1]]; }
+    if(type === 'ryu'){ return [[-1,-1],[-1,1],[1,-1],[1,1]]; }
+    return [];
+  }
+  // Sliding directions (any distance until blocked/capture) for 飛/角 and their promotions.
+  function slideDirs(type){
+    if(type === 'bishop' || type === 'uma') return [[-1,-1],[-1,1],[1,-1],[1,1]];
+    if(type === 'rook' || type === 'ryu') return [[-1,0],[1,0],[0,-1],[0,1]];
     return [];
   }
 
-  function inBounds(r,c){ return r>=0 && r<ROWS && c>=0 && c<COLS; }
-
-  function legalMovesFrom(r,c){
+  // Raw "physically possible" moves, ignoring whether they'd leave your own king in check.
+  function pseudoMovesFrom(board, r, c){
     const piece = board[r][c];
     if(!piece) return [];
-    const offs = moveOffsets(piece.type, piece.owner);
     const out = [];
-    for(const [dr,dc] of offs){
+    for(const [dr,dc] of stepOffsets(piece.type, piece.owner)){
       const nr=r+dr, nc=c+dc;
       if(!inBounds(nr,nc)) continue;
       const target = board[nr][nc];
       if(target && target.owner === piece.owner) continue;
       out.push([nr,nc]);
     }
+    for(const [dr,dc] of slideDirs(piece.type)){
+      let nr=r+dr, nc=c+dc;
+      while(inBounds(nr,nc)){
+        const target = board[nr][nc];
+        if(target){
+          if(target.owner !== piece.owner) out.push([nr,nc]);
+          break;
+        }
+        out.push([nr,nc]);
+        nr += dr; nc += dc;
+      }
+    }
     return out;
   }
 
-  function legalDropsFor(owner, type){
+  function pseudoDropsFor(board, hands, owner, type){
     const out = [];
     const lastRow = owner === 'sente' ? 0 : ROWS-1;
     let hasOwnPawnInCol = null;
@@ -1021,8 +1070,8 @@
       for(let c=0;c<COLS;c++){
         if(board[r][c]) continue;
         if(type === 'pawn'){
-          if(r === lastRow) continue;
-          if(hasOwnPawnInCol[c]) continue;
+          if(r === lastRow) continue;          // 行きどころのない駒
+          if(hasOwnPawnInCol[c]) continue;      // 二歩
         }
         out.push([r,c]);
       }
@@ -1030,88 +1079,149 @@
     return out;
   }
 
-  function performMove(r,c,nr,nc){
-    const piece = board[r][c];
-    const captured = board[nr][nc];
+  function cloneBoard(b){ return b.map(row => row.map(c => c ? { owner:c.owner, type:c.type } : null)); }
+  function cloneHands(h){ return { sente: {...h.sente}, gote: {...h.gote} }; }
+
+  function findKing(board, owner){
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+      const p = board[r][c];
+      if(p && p.owner === owner && p.type === 'king') return [r,c];
+    }
+    return null;
+  }
+  function isSquareAttacked(board, r, c, byOwner){
+    for(let rr=0;rr<ROWS;rr++){
+      for(let cc=0;cc<COLS;cc++){
+        const p = board[rr][cc];
+        if(!p || p.owner !== byOwner) continue;
+        if(pseudoMovesFrom(board, rr, cc).some(([mr,mc]) => mr===r && mc===c)) return true;
+      }
+    }
+    return false;
+  }
+  function isKingInCheck(board, owner){
+    const kpos = findKing(board, owner);
+    if(!kpos) return false;
+    const opponent = owner === 'sente' ? 'gote' : 'sente';
+    return isSquareAttacked(board, kpos[0], kpos[1], opponent);
+  }
+
+  function isInPromotionZone(row, owner){
+    return owner === 'sente' ? row === 0 : row === ROWS-1;
+  }
+  function isPromotionEligible(piece, fromRow, toRow){
+    return !!PROMOTED[piece.type] && (isInPromotionZone(fromRow, piece.owner) || isInPromotionZone(toRow, piece.owner));
+  }
+  // A pawn landing on the very last row has no legal forward move left unless it promotes.
+  function mustPromote(piece, toRow){
+    if(piece.type !== 'pawn') return false;
+    const lastRow = piece.owner === 'sente' ? 0 : ROWS-1;
+    return toRow === lastRow;
+  }
+
+  function applyMove(board, hands, move, player, promote){
+    const piece = board[move.r][move.c];
+    const captured = board[move.nr][move.nc];
     let kingCaptured = false;
     if(captured){
       if(captured.type === 'king') kingCaptured = true;
       else {
-        const baseType = captured.type === 'tokin' ? 'pawn' : (captured.type === 'narigin' ? 'silver' : captured.type);
-        hands[piece.owner][baseType] = (hands[piece.owner][baseType] || 0) + 1;
+        const baseType = DEMOTED[captured.type] || captured.type;
+        hands[player][baseType] = (hands[player][baseType] || 0) + 1;
       }
     }
-    board[nr][nc] = piece;
-    board[r][c] = null;
-    const lastRow = piece.owner === 'sente' ? 0 : ROWS-1;
-    if(nr === lastRow && PROMOTED[piece.type]){
-      board[nr][nc] = { owner: piece.owner, type: PROMOTED[piece.type] };
-    }
+    const eligible = isPromotionEligible(piece, move.r, move.nr);
+    const newType = (promote && eligible) ? PROMOTED[piece.type] : piece.type;
+    board[move.nr][move.nc] = { owner: player, type: newType };
+    board[move.r][move.c] = null;
     return kingCaptured;
   }
-
-  function performDrop(type, nr, nc){
-    board[nr][nc] = { owner: turn, type };
-    hands[turn][type] -= 1;
-    if(hands[turn][type] <= 0) delete hands[turn][type];
+  function applyDrop(board, hands, move, player){
+    board[move.nr][move.nc] = { owner: player, type: move.type };
+    hands[player][move.type] -= 1;
+    if(hands[player][move.type] <= 0) delete hands[player][move.type];
   }
 
-  // ---------- CPU opponent (minimax with alpha-beta pruning) ----------
-  const PIECE_VALUE = { pawn:1, silver:5, gold:6, tokin:6, narigin:6, king:0 };
-
-  function cloneBoardState(b){ return b.map(row => row.map(c => c ? { owner:c.owner, type:c.type } : null)); }
-  function cloneHandsState(h){ return { sente: {...h.sente}, gote: {...h.gote} }; }
-
-  function simLegalMovesFrom(simBoard, r, c){
-    const piece = simBoard[r][c];
-    if(!piece) return [];
-    const offs = moveOffsets(piece.type, piece.owner);
-    const out = [];
-    for(const [dr,dc] of offs){
-      const nr=r+dr, nc=c+dc;
-      if(!inBounds(nr,nc)) continue;
-      const target = simBoard[nr][nc];
-      if(target && target.owner === piece.owner) continue;
-      out.push([nr,nc]);
-    }
-    return out;
+  function wouldLeaveSelfInCheck(board, hands, move, player){
+    const b2 = cloneBoard(board), h2 = cloneHands(hands);
+    if(move.kind === 'move') applyMove(b2, h2, move, player, false);
+    else applyDrop(b2, h2, move, player);
+    return isKingInCheck(b2, player);
   }
 
-  function isKingInCheck(simBoard, owner){
-    let kr = -1, kc = -1;
+  // Self-check-legal move list (fast — no 打ち歩詰め / 千日手 filtering). Used
+  // both for checkmate/escape detection and as the base for full legality.
+  function generateMoves(board, hands, player){
+    const moves = [];
     for(let r=0;r<ROWS;r++){
       for(let c=0;c<COLS;c++){
-        const p = simBoard[r][c];
-        if(p && p.owner === owner && p.type === 'king'){ kr = r; kc = c; }
+        const piece = board[r][c];
+        if(!piece || piece.owner !== player) continue;
+        pseudoMovesFrom(board, r, c).forEach(([nr,nc]) => {
+          const move = { kind:'move', r, c, nr, nc };
+          if(wouldLeaveSelfInCheck(board, hands, move, player)) return;
+          move.promotable = isPromotionEligible(piece, r, nr);
+          move.mustPromote = mustPromote(piece, nr);
+          moves.push(move);
+        });
       }
     }
-    if(kr === -1) return false;
-    const opponent = owner === 'sente' ? 'gote' : 'sente';
-    for(let r=0;r<ROWS;r++){
-      for(let c=0;c<COLS;c++){
-        const p = simBoard[r][c];
-        if(!p || p.owner !== opponent) continue;
-        const moves = simLegalMovesFrom(simBoard, r, c);
-        if(moves.some(([mr,mc]) => mr === kr && mc === kc)) return true;
-      }
-    }
-    return false;
+    Object.keys(hands[player] || {}).forEach(type => {
+      if((hands[player][type] || 0) <= 0) return;
+      pseudoDropsFor(board, hands, player, type).forEach(([nr,nc]) => {
+        const move = { kind:'drop', type, nr, nc };
+        if(wouldLeaveSelfInCheck(board, hands, move, player)) return;
+        moves.push(move);
+      });
+    });
+    return moves;
   }
 
-  function hasAnyLegalMove(owner){
-    for(let r=0;r<ROWS;r++){
-      for(let c=0;c<COLS;c++){
-        const p = board[r][c];
-        if(p && p.owner === owner && legalMovesFrom(r,c).length > 0) return true;
-      }
-    }
-    const hand = hands[owner] || {};
-    for(const type of Object.keys(hand)){
-      if((hand[type] || 0) <= 0) continue;
-      if(legalDropsFor(owner, type).length > 0) return true;
-    }
-    return false;
+  function hasAnyLegalMove(board, hands, owner){
+    return generateMoves(board, hands, owner).length > 0;
   }
+  function isCheckmate(board, hands, owner){
+    return isKingInCheck(board, owner) && !hasAnyLegalMove(board, hands, owner);
+  }
+
+  function encodePosition(board, hands, turnToMove){
+    let s = turnToMove[0];
+    for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
+      const p = board[r][c];
+      s += p ? (p.owner[0] + p.type) : '.';
+    }
+    const h = side => Object.keys(hands[side]).sort().map(k => k + hands[side][k]).join(',');
+    return s + '|' + h('sente') + '|' + h('gote');
+  }
+  function recordPosition(){
+    const key = encodePosition(board, hands, turn);
+    positionHistory.set(key, (positionHistory.get(key) || 0) + 1);
+  }
+
+  // Fully legal moves: adds 打ち歩詰め (illegal mating pawn drop) and blocks a
+  // move that would create a 4th repeated position while giving check
+  // (連続王手の千日手 — the checking side must play something else). A
+  // non-check repetition is allowed through and ends the game via 千日手
+  // (先手の負け) once actually played, matching the reference rules.
+  function generateFullyLegalMoves(board, hands, player){
+    return generateMoves(board, hands, player).filter(move => {
+      const opponent = player === 'sente' ? 'gote' : 'sente';
+      if(move.kind === 'drop' && move.type === 'pawn'){
+        const b2 = cloneBoard(board), h2 = cloneHands(hands);
+        applyDrop(b2, h2, move, player);
+        if(isCheckmate(b2, h2, opponent)) return false; // 打ち歩詰め
+      }
+      const b2 = cloneBoard(board), h2 = cloneHands(hands);
+      if(move.kind === 'move') applyMove(b2, h2, move, player, move.mustPromote);
+      else applyDrop(b2, h2, move, player);
+      if(isKingInCheck(b2, opponent)){
+        const key = encodePosition(b2, h2, opponent);
+        if((positionHistory.get(key) || 0) >= 3) return false; // would be a 4th repeat via continuous check
+      }
+      return true;
+    });
+  }
+  const PIECE_VALUE = { pawn:1, silver:5, gold:6, tokin:7, narigin:7, bishop:8, rook:10, uma:11, ryu:13, king:0 };
 
   function showCheckPopup(owner){
     const el = document.getElementById('checkPopup');
@@ -1121,102 +1231,33 @@
     el.classList.add('show');
   }
 
-  function simLegalDrops(simBoard, simHands, owner, type){
-    const out = [];
-    const lastRow = owner === 'sente' ? 0 : ROWS-1;
-    let hasOwnPawnInCol = null;
-    if(type === 'pawn'){
-      hasOwnPawnInCol = Array(COLS).fill(false);
-      for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++){
-        const p = simBoard[r][c];
-        if(p && p.owner===owner && p.type==='pawn') hasOwnPawnInCol[c] = true;
-      }
-    }
-    for(let r=0;r<ROWS;r++){
-      for(let c=0;c<COLS;c++){
-        if(simBoard[r][c]) continue;
-        if(type === 'pawn'){
-          if(r === lastRow) continue;
-          if(hasOwnPawnInCol[c]) continue;
-        }
-        out.push([r,c]);
-      }
-    }
-    return out;
-  }
-
-  function generateAllMoves(simBoard, simHands, player){
-    const moves = [];
-    for(let r=0;r<ROWS;r++){
-      for(let c=0;c<COLS;c++){
-        const p = simBoard[r][c];
-        if(p && p.owner === player){
-          simLegalMovesFrom(simBoard, r, c).forEach(([nr,nc]) => {
-            moves.push({ kind:'move', r, c, nr, nc });
-          });
-        }
-      }
-    }
-    Object.keys(simHands[player] || {}).forEach(type => {
-      if((simHands[player][type] || 0) <= 0) return;
-      simLegalDrops(simBoard, simHands, player, type).forEach(([nr,nc]) => {
-        moves.push({ kind:'drop', type, nr, nc });
-      });
-    });
-    return moves;
-  }
-
-  function applySimMove(simBoard, simHands, move, player){
-    if(move.kind === 'move'){
-      const piece = simBoard[move.r][move.c];
-      const captured = simBoard[move.nr][move.nc];
-      let kingCaptured = false;
-      if(captured){
-        if(captured.type === 'king') kingCaptured = true;
-        else {
-          const baseType = captured.type === 'tokin' ? 'pawn' : (captured.type === 'narigin' ? 'silver' : captured.type);
-          simHands[player][baseType] = (simHands[player][baseType] || 0) + 1;
-        }
-      }
-      simBoard[move.nr][move.nc] = piece;
-      simBoard[move.r][move.c] = null;
-      const lastRow = player === 'sente' ? 0 : ROWS-1;
-      if(move.nr === lastRow && PROMOTED[piece.type]){
-        simBoard[move.nr][move.nc] = { owner: player, type: PROMOTED[piece.type] };
-      }
-      return kingCaptured;
-    } else {
-      simBoard[move.nr][move.nc] = { owner: player, type: move.type };
-      simHands[player][move.type] -= 1;
-      if(simHands[player][move.type] <= 0) delete simHands[player][move.type];
-      return false;
-    }
-  }
-
-  function evaluatePosition(simBoard, simHands){
+  function evaluatePosition(board, hands){
     let score = 0;
     for(let r=0;r<ROWS;r++){
       for(let c=0;c<COLS;c++){
-        const p = simBoard[r][c];
+        const p = board[r][c];
         if(!p) continue;
-        const v = PIECE_VALUE[p.type] || 0;
-        score += (p.owner === 'gote' ? 1 : -1) * v;
+        score += (p.owner === 'gote' ? 1 : -1) * (PIECE_VALUE[p.type] || 0);
       }
     }
-    Object.keys(simHands.gote || {}).forEach(t => { score += (PIECE_VALUE[t] || 0) * simHands.gote[t]; });
-    Object.keys(simHands.sente || {}).forEach(t => { score -= (PIECE_VALUE[t] || 0) * simHands.sente[t]; });
+    Object.keys(hands.gote || {}).forEach(t => { score += (PIECE_VALUE[t] || 0) * hands.gote[t]; });
+    Object.keys(hands.sente || {}).forEach(t => { score -= (PIECE_VALUE[t] || 0) * hands.sente[t]; });
     return score;
   }
 
-  function minimaxSearch(simBoard, simHands, player, depth, alpha, beta){
-    const moves = generateAllMoves(simBoard, simHands, player);
-    if(depth === 0 || moves.length === 0) return evaluatePosition(simBoard, simHands);
+  // Recursive search uses the cheaper self-check-only move list (generateMoves)
+  // for speed; 打ち歩詰め and 千日手 are rare edge cases that only matter for
+  // the move actually played, which is validated separately via
+  // generateFullyLegalMoves at the root.
+  function minimaxSearch(board, hands, player, depth, alpha, beta){
+    const moves = generateMoves(board, hands, player);
+    if(depth === 0 || moves.length === 0) return evaluatePosition(board, hands);
 
     if(player === 'gote'){
       let best = -Infinity;
       for(const move of moves){
-        const b2 = cloneBoardState(simBoard), h2 = cloneHandsState(simHands);
-        const kingCaptured = applySimMove(b2, h2, move, player);
+        const b2 = cloneBoard(board), h2 = cloneHands(hands);
+        const kingCaptured = move.kind === 'move' ? applyMove(b2, h2, move, player, true) : (applyDrop(b2, h2, move, player), false);
         const score = kingCaptured ? (1000 + depth) : minimaxSearch(b2, h2, 'sente', depth - 1, alpha, beta);
         if(score > best) best = score;
         alpha = Math.max(alpha, best);
@@ -1226,8 +1267,8 @@
     } else {
       let best = Infinity;
       for(const move of moves){
-        const b2 = cloneBoardState(simBoard), h2 = cloneHandsState(simHands);
-        const kingCaptured = applySimMove(b2, h2, move, player);
+        const b2 = cloneBoard(board), h2 = cloneHands(hands);
+        const kingCaptured = move.kind === 'move' ? applyMove(b2, h2, move, player, true) : (applyDrop(b2, h2, move, player), false);
         const score = kingCaptured ? (-1000 - depth) : minimaxSearch(b2, h2, 'gote', depth - 1, alpha, beta);
         if(score < best) best = score;
         beta = Math.min(beta, best);
@@ -1242,8 +1283,8 @@
   function cpuChooseMove(){
     const side = cpuSide();
     const opponent = side === 'sente' ? 'gote' : 'sente';
-    const maxDepth = cpuDifficulty === 'oni' ? 12 : (cpuDifficulty === 'master' ? 8 : 4);
-    const moves = generateAllMoves(board, hands, side);
+    const maxDepth = cpuDifficulty === 'oni' ? 4 : (cpuDifficulty === 'master' ? 3 : 2);
+    const moves = generateFullyLegalMoves(board, hands, side);
     if(moves.length === 0) return null;
 
     const startTime = performance.now();
@@ -1251,7 +1292,7 @@
 
     // Iterative deepening: search depth 1, 2, 3... keeping the best result
     // from the deepest COMPLETED depth, and bail out once the time budget
-    // (300ms) is used up so the UI never freezes, even on the "master" level.
+    // (300ms) is used up so the UI never freezes.
     for(let depth = 1; depth <= maxDepth; depth++){
       if(performance.now() - startTime > CPU_TIME_BUDGET_MS) break;
 
@@ -1261,8 +1302,8 @@
 
       for(const move of moves){
         if(performance.now() - startTime > CPU_TIME_BUDGET_MS){ timedOut = true; break; }
-        const b2 = cloneBoardState(board), h2 = cloneHandsState(hands);
-        const kingCaptured = applySimMove(b2, h2, move, side);
+        const b2 = cloneBoard(board), h2 = cloneHands(hands);
+        const kingCaptured = move.kind === 'move' ? applyMove(b2, h2, move, side, true) : (applyDrop(b2, h2, move, side), false);
         let score;
         if(kingCaptured){
           score = side === 'gote' ? 10000 : -10000;
@@ -1275,7 +1316,6 @@
 
       if(timedOut || !depthBestMove) break;
       bestMove = depthBestMove;
-      // A forced king capture line was found — no need to search deeper.
       if(Math.abs(depthBestScore) >= 9000) break;
     }
 
@@ -1287,40 +1327,82 @@
     if(gameOver || !vsCPU || turn !== cpuSide()) return;
     const move = cpuChooseMove();
     if(!move){
-      // Safety net: CPU has no legal move. checkAndHandleNoMoves() should
-      // normally have already caught this right after the turn switched.
-      if(!checkAndHandleNoMoves()){
-        turn = turn === 'sente' ? 'gote' : 'sente';
-        render(true);
-      }
-      return;
-    }
-    pushHistorySnapshot();
-    let kingCaptured;
-    if(move.kind === 'move'){
-      kingCaptured = performMove(move.r, move.c, move.nr, move.nc);
-    } else {
-      performDrop(move.type, move.nr, move.nc);
-      kingCaptured = false;
-    }
-    cpuMovesMade++;
-    endTurn(kingCaptured);
-  }
-
-  function endTurn(kingCaptured){
-    clearTurnTimer();
-    if(kingCaptured){
+      // Defensive fallback: the CPU has no legal move. endTurn()'s
+      // checkmate/no-move detection should already have ended the game
+      // before this point is ever reached, but handle it safely regardless.
       gameOver = true;
-      showWinner(turn);
+      const winner = turn === 'sente' ? 'gote' : 'sente';
+      showWinner(winner, '動かせる手がありません');
       render();
       return;
     }
+    pushHistorySnapshot();
+    // The CPU always promotes when eligible — correct in the overwhelming
+    // majority of real minishogi positions.
+    if(move.kind === 'move') applyMove(board, hands, move, turn, true);
+    else applyDrop(board, hands, move, turn);
+    cpuMovesMade++;
+    endTurn();
+  }
+
+  function commitMove(move, promote){
+    pushHistorySnapshot();
+    let kingCaptured;
+    if(move.kind === 'move') kingCaptured = applyMove(board, hands, move, turn, promote);
+    else { applyDrop(board, hands, move, turn); kingCaptured = false; }
+    if(kingCaptured){
+      // Shouldn't happen under fully-legal (self-check-illegal) play, but guard anyway.
+      gameOver = true;
+      showWinner(turn, '玉を討ち取りました');
+      render();
+      return;
+    }
+    endTurn();
+  }
+
+  function requestMove(move){
+    if(move.mustPromote){
+      commitMove(move, true);
+      return;
+    }
+    if(move.promotable){
+      pendingPromotionMove = move;
+      showPromotionPrompt();
+      return;
+    }
+    commitMove(move, false);
+  }
+
+  function endTurn(){
+    clearTurnTimer();
     turn = turn === 'sente' ? 'gote' : 'sente';
     selected = null;
     selectedDrop = null;
-    render(true);
+    recordPosition();
 
-    if(checkAndHandleNoMoves()) return;
+    if(isCheckmate(board, hands, turn)){
+      gameOver = true;
+      const winner = turn === 'sente' ? 'gote' : 'sente';
+      showWinner(winner, '相手玉を詰ませました');
+      render();
+      return;
+    }
+    if(!hasAnyLegalMove(board, hands, turn)){
+      gameOver = true;
+      const winner = turn === 'sente' ? 'gote' : 'sente';
+      showWinner(winner, '動かせる手がありません');
+      render();
+      return;
+    }
+    const key = encodePosition(board, hands, turn);
+    if((positionHistory.get(key) || 0) >= 4){
+      gameOver = true;
+      showWinner('gote', '千日手（同一局面が4回現れました）');
+      render();
+      return;
+    }
+
+    render(true);
 
     if(isKingInCheck(board, turn)) showCheckPopup(turn);
 
@@ -1347,71 +1429,38 @@
       const el = document.getElementById(atBottom ? 'winnerTextBottom' : 'winnerTextTop');
       el.textContent = seatLabel(owner) + (owner === winner ? 'の勝ち！' : 'の負け…');
     });
-    document.getElementById('winnerReason').textContent = reason || '王を討ち取りました';
+    // In 2P local play, the top slot belongs to a second real person sitting
+    // "across the board", so it's rotated to read right-side up for them. In
+    // vsCPU mode the top slot is always the CPU's own status line, which
+    // nobody needs to read upside down, so it stays upright too.
+    document.getElementById('winnerPerspectiveTop').classList.toggle('rotated', !vsCPU);
+    document.getElementById('winnerReason').textContent = reason || '相手玉を詰ませました';
     overlay.classList.add('show');
   }
 
-  function showDraw(){
-    clearTurnTimer();
-    const overlay = document.getElementById('winnerOverlay');
-    document.getElementById('winnerTextTop').textContent = '引き分け';
-    document.getElementById('winnerTextBottom').textContent = '引き分け';
-    document.getElementById('winnerReason').textContent = '両者とも動かせる手がありません';
+  function showPromotionPrompt(){
+    const overlay = document.getElementById('promotionOverlay');
+    document.getElementById('promotionCard').classList.toggle('rotated', !isTurnAtBottom(turn));
     overlay.classList.add('show');
   }
 
-  // If the side to move has no legal move at all (no piece can move, no hand
-  // piece can be dropped), show a message and auto-pass to the other side
-  // instead of leaving the board stuck. If both sides end up unable to move,
-  // the game ends in a draw.
-  function checkAndHandleNoMoves(){
-    if(gameOver) return false;
-    if(hasAnyLegalMove(turn)) return false;
-
-    clearTurnTimer();
-    const sideLabel = turn === 'sente' ? '先手' : '後手';
-    document.getElementById('statusText').textContent = sideLabel + 'は動かせる手がありません。パスします…';
-
-    setTimeout(() => {
-      if(gameOver) return;
-      turn = turn === 'sente' ? 'gote' : 'sente';
-      selected = null;
-      selectedDrop = null;
-      render(true);
-
-      if(!hasAnyLegalMove(turn)){
-        gameOver = true;
-        showDraw();
-        render();
-        return;
-      }
-
-      if(isKingInCheck(board, turn)) showCheckPopup(turn);
-
-      if(vsCPU && turn === cpuSide() && !gameOver){
-        cpuThinking = true;
-        const sideLabel2 = cpuSide() === 'sente' ? '先手' : '後手';
-        document.getElementById('statusText').textContent = cpuLabel() + '（' + sideLabel2 + '）が考え中…';
-        setTimeout(cpuTakeTurn, 600);
-      }
-      startTurnTimerIfNeeded();
-    }, 1200);
-
-    return true;
+  function movesFromSquare(r, c){
+    return generateFullyLegalMoves(board, hands, turn).filter(m => m.kind === 'move' && m.r === r && m.c === c);
+  }
+  function dropsForType(type){
+    return generateFullyLegalMoves(board, hands, turn).filter(m => m.kind === 'drop' && m.type === type);
   }
 
   function onCellClick(r,c){
-    if(gameOver || (vsCPU && turn === cpuSide())) return;
+    if(gameOver || pendingPromotionMove || (vsCPU && turn === cpuSide())) return;
     const piece = board[r][c];
 
     if(selectedDrop){
-      const legal = legalDropsFor(turn, selectedDrop);
-      if(legal.some(([lr,lc]) => lr===r && lc===c)){
-        pushHistorySnapshot();
-        performDrop(selectedDrop, r, c);
-        endTurn(false);
+      const match = dropsForType(selectedDrop).find(m => m.nr === r && m.nc === c);
+      selectedDrop = null;
+      if(match){
+        requestMove(match);
       } else {
-        selectedDrop = null;
         render();
       }
       return;
@@ -1419,11 +1468,10 @@
 
     if(selected){
       const [sr,sc] = selected;
-      const legal = legalMovesFrom(sr,sc);
-      if(legal.some(([lr,lc]) => lr===r && lc===c)){
-        pushHistorySnapshot();
-        const kingCaptured = performMove(sr,sc,r,c);
-        endTurn(kingCaptured);
+      const match = movesFromSquare(sr,sc).find(m => m.nr === r && m.nc === c);
+      if(match){
+        selected = null;
+        requestMove(match);
         return;
       }
       if(piece && piece.owner === turn){
@@ -1443,7 +1491,7 @@
   }
 
   function onHandClick(owner, type){
-    if(gameOver || owner !== turn || (vsCPU && turn === cpuSide())) return;
+    if(gameOver || pendingPromotionMove || owner !== turn || (vsCPU && turn === cpuSide())) return;
     selected = null;
     selectedDrop = (selectedDrop === type) ? null : type;
     render();
@@ -1452,7 +1500,7 @@
   function komaEl(piece, opts){
     opts = opts || {};
     const div = document.createElement('div');
-    div.className = 'koma' + (piece.owner === 'gote' ? ' gote-side' : '') + (opts.noFlip ? ' no-flip' : '') + (piece.type === 'king' ? ' king' : '') + (['tokin','narigin'].includes(piece.type) ? ' promoted' : '');
+    div.className = 'koma' + (piece.owner === 'gote' ? ' gote-side' : '') + (opts.noFlip ? ' no-flip' : '') + (piece.type === 'king' ? ' king' : '') + (['tokin','narigin','uma','ryu'].includes(piece.type) ? ' promoted' : '');
     const depth2 = document.createElement('div');
     depth2.className = 'koma-depth d2';
     const depth1 = document.createElement('div');
@@ -1516,9 +1564,9 @@
 
     let highlightCells = [];
     if(selected){
-      highlightCells = legalMovesFrom(selected[0], selected[1]);
+      highlightCells = movesFromSquare(selected[0], selected[1]).map(m => [m.nr, m.nc]);
     } else if(selectedDrop){
-      highlightCells = legalDropsFor(turn, selectedDrop);
+      highlightCells = dropsForType(selectedDrop).map(m => [m.nr, m.nc]);
     }
 
     const senteInCheck = !gameOver && isKingInCheck(board, 'sente');
@@ -1659,7 +1707,9 @@
     document.getElementById('modeCPUBtn').classList.toggle('active', setupVsCPU && setupCpuDifficulty === 'normal');
     document.getElementById('modeCPUMasterBtn').classList.toggle('active', setupVsCPU && setupCpuDifficulty === 'master');
     const oniBtn = document.getElementById('modeCPUOniBtn');
-    oniBtn.classList.toggle('active', setupVsCPU && setupCpuDifficulty === 'oni');
+    const oniActive = setupVsCPU && setupCpuDifficulty === 'oni';
+    oniBtn.classList.toggle('active', oniActive);
+    document.getElementById('oniHint').classList.toggle('show', oniActive);
     document.getElementById('sideToggleRow').classList.toggle('hidden', !setupVsCPU);
     document.getElementById('sideSenteBtn').classList.toggle('active', setupHumanSide === 'sente');
     document.getElementById('sideGoteBtn').classList.toggle('active', setupHumanSide === 'gote');
@@ -1761,7 +1811,7 @@
   });
 
   function openUndoConfirm(requestedBy){
-    if(moveHistory.length === 0 || undoBlocked || undoUseCount >= 2) return;
+    if(moveHistory.length === 0 || undoBlocked || undoUseCount >= 5) return;
     if(totalUndoUsedThisGame >= totalUndoLimitForMode()){
       const modeLabel = cpuDifficulty === 'oni' ? '鬼' : '達人';
       const message = cpuDifficulty === 'oni' ? '「待ったは一切禁止だ！」' : '「待ったを使いすぎた！」';
@@ -1777,7 +1827,7 @@
     pendingUndoRequestedBy = requestedBy;
     const responder = requestedBy === 'sente' ? '後手' : '先手';
     document.getElementById('undoConfirmText').textContent =
-      '直前の一手を取り消します。' + responder + 'の許可が必要です。よろしいですか？（1手につき待ったは2回まで）';
+      '直前の一手を取り消します。' + responder + 'の許可が必要です。よろしいですか？（1手につき待ったは5回まで）';
     // Rotate the card so whichever side must respond can read it right-side up.
     document.getElementById('undoConfirmCard').classList.toggle('rotated', requestedBy === 'sente');
     document.getElementById('undoConfirmOverlay').classList.add('show');
@@ -1807,6 +1857,19 @@
       undoBlocked = true;
     }
     updateUndoButton();
+  });
+
+  document.getElementById('promoteYesBtn').addEventListener('click', () => {
+    document.getElementById('promotionOverlay').classList.remove('show');
+    const move = pendingPromotionMove;
+    pendingPromotionMove = null;
+    if(move) commitMove(move, true);
+  });
+  document.getElementById('promoteNoBtn').addEventListener('click', () => {
+    document.getElementById('promotionOverlay').classList.remove('show');
+    const move = pendingPromotionMove;
+    pendingPromotionMove = null;
+    if(move) commitMove(move, false);
   });
 
   // --- user-selectable background color switch (setup screen only; hidden during play) ---
