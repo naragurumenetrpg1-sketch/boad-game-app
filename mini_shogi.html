@@ -385,6 +385,19 @@
     border-radius:50%;
     background: rgba(255,255,255,0.35);
   }
+  /* Squares a piece could physically reach but can't legally move to,
+     because it would leave (or fail to resolve) check on its own king. */
+  .cell.illegal-highlight{
+    box-shadow: inset 0 0 0 2px rgba(214,64,64,0.8);
+  }
+  .cell.illegal-highlight::after{
+    content:'';
+    position:absolute;
+    width:60%; height:60%;
+    border-radius:4px;
+    background: transparent;
+    box-shadow: inset 0 0 0 1px rgba(214,64,64,0.35);
+  }
   .cell.selected{
     box-shadow: inset 0 0 0 2px var(--silver-dim);
   }
@@ -587,24 +600,27 @@
 
   .winner-overlay{
     position:fixed; inset:0;
-    background: rgba(0,0,0,0.82);
+    background: rgba(0,0,0,0.28);
     display:none;
     align-items:center; justify-content:center;
     z-index:20;
     padding: 20px;
+    cursor: pointer;
   }
   .winner-overlay.show{ display:flex; }
   .winner-card{
-    background: linear-gradient(180deg, var(--paper), var(--paper-deep));
+    background: rgba(10,10,10,0.5);
+    backdrop-filter: blur(2px);
     border: 1px solid var(--hairline);
     border-radius: 4px;
     padding: 26px 34px;
     text-align:center;
-    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.6);
     max-width: 300px;
     display:flex;
     flex-direction:column;
     gap:14px;
+    cursor: default;
   }
   .winner-perspective.rotated{ transform: rotate(180deg); }
   .winner-card .big{
@@ -613,11 +629,24 @@
     font-size:1.3rem;
     color:#fff;
     letter-spacing:0.04em;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.7);
+  }
+  .winner-tap-hint{
+    font-size:0.66rem;
+    color: var(--silver);
+    letter-spacing:0.08em;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.7);
+    animation: tapHintPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes tapHintPulse{
+    0%,100%{ opacity:0.55; }
+    50%{ opacity:1; }
   }
   #winnerReason{
-    color:var(--silver-dim);
+    color:var(--silver);
     font-size:0.78rem;
     letter-spacing:0.04em;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.7);
     border-top: 1px solid var(--hairline);
     border-bottom: 1px solid var(--hairline);
     padding: 10px 0;
@@ -813,7 +842,7 @@
     <div class="winner-perspective">
       <div id="winnerTextBottom" class="big">あなたの負け…</div>
     </div>
-    <button id="againBtn">もう一度</button>
+    <div class="winner-tap-hint">タップして次の対局へ</div>
   </div>
 </div>
 
@@ -1450,6 +1479,28 @@
   function dropsForType(type){
     return generateFullyLegalMoves(board, hands, turn).filter(m => m.kind === 'drop' && m.type === type);
   }
+  // Squares a piece could physically reach but can't legally move to,
+  // because it would leave (or fail to resolve) check on its own king.
+  function illegalMovesFromSquare(r, c){
+    const legal = movesFromSquare(r, c).map(m => [m.nr, m.nc]);
+    return pseudoMovesFrom(board, r, c).filter(([pr,pc]) => !legal.some(([lr,lc]) => lr===pr && lc===pc));
+  }
+  function illegalDropsForType(type){
+    const legal = dropsForType(type).map(m => [m.nr, m.nc]);
+    return pseudoDropsFor(board, hands, turn, type).filter(([pr,pc]) => !legal.some(([lr,lc]) => lr===pr && lc===pc));
+  }
+
+  function selectPiece(r, c){
+    selected = [r,c];
+    render();
+    // A piece can look selectable but have zero legal destinations if moving
+    // it would leave (or fail to resolve) a check on its own king — most
+    // often because it's pinned. Explain that instead of silently doing
+    // nothing, since it's easy to mistake for a bug.
+    if(movesFromSquare(r, c).length === 0){
+      document.getElementById('statusText').textContent = 'その駒は動かすと王手放置になるため動かせません';
+    }
+  }
 
   function onCellClick(r,c){
     if(gameOver || pendingPromotionMove || (vsCPU && turn === cpuSide())) return;
@@ -1457,11 +1508,15 @@
 
     if(selectedDrop){
       const match = dropsForType(selectedDrop).find(m => m.nr === r && m.nc === c);
+      const illegal = !match && illegalDropsForType(selectedDrop).some(([ir,ic]) => ir===r && ic===c);
       selectedDrop = null;
       if(match){
         requestMove(match);
       } else {
         render();
+        if(illegal){
+          document.getElementById('statusText').textContent = 'そこに打つと王手放置になるため打てません';
+        }
       }
       return;
     }
@@ -1474,9 +1529,14 @@
         requestMove(match);
         return;
       }
-      if(piece && piece.owner === turn){
-        selected = [r,c];
+      const illegal = illegalMovesFromSquare(sr,sc).some(([ir,ic]) => ir===r && ic===c);
+      if(illegal){
         render();
+        document.getElementById('statusText').textContent = 'そこへ動かすと王手放置になるため動かせません';
+        return;
+      }
+      if(piece && piece.owner === turn){
+        selectPiece(r, c);
         return;
       }
       selected = null;
@@ -1485,8 +1545,7 @@
     }
 
     if(piece && piece.owner === turn){
-      selected = [r,c];
-      render();
+      selectPiece(r, c);
     }
   }
 
@@ -1495,6 +1554,9 @@
     selected = null;
     selectedDrop = (selectedDrop === type) ? null : type;
     render();
+    if(selectedDrop && dropsForType(selectedDrop).length === 0){
+      document.getElementById('statusText').textContent = 'その持ち駒は打てるマスがありません';
+    }
   }
 
   function komaEl(piece, opts){
@@ -1563,10 +1625,13 @@
     boardEl.innerHTML = '';
 
     let highlightCells = [];
+    let illegalHighlightCells = [];
     if(selected){
       highlightCells = movesFromSquare(selected[0], selected[1]).map(m => [m.nr, m.nc]);
+      illegalHighlightCells = illegalMovesFromSquare(selected[0], selected[1]);
     } else if(selectedDrop){
       highlightCells = dropsForType(selectedDrop).map(m => [m.nr, m.nc]);
+      illegalHighlightCells = illegalDropsForType(selectedDrop);
     }
 
     const senteInCheck = !gameOver && isKingInCheck(board, 'sente');
@@ -1581,6 +1646,7 @@
         cell.setAttribute('role','gridcell');
         if(selected && selected[0]===r && selected[1]===c) cell.classList.add('selected');
         if(highlightCells.some(([hr,hc]) => hr===r && hc===c)) cell.classList.add('highlight');
+        if(illegalHighlightCells.some(([hr,hc]) => hr===r && hc===c)) cell.classList.add('illegal-highlight');
 
         const piece = board[r][c];
         if(piece){
@@ -1805,7 +1871,7 @@
   document.getElementById('newGameBtn').addEventListener('click', () => {
     runOrConfirm(resetGame, 'はじめから', '現在の対局を中断してやり直します。よろしいですか？');
   });
-  document.getElementById('againBtn').addEventListener('click', resetGame);
+  document.getElementById('winnerOverlay').addEventListener('click', resetGame);
   document.getElementById('rulesBtn').addEventListener('click', () => {
     document.getElementById('rules').classList.toggle('open');
   });
