@@ -783,17 +783,28 @@
       writing-mode: vertical-rl;
       text-orientation: upright;
       min-width: 0;
+      line-height: 1;
       letter-spacing: 0.15em;
       white-space: nowrap;
     }
     .komadai .empty-hint{
       writing-mode: vertical-rl;
       text-orientation: upright;
+      line-height: 1;
+    }
+    /* The far-seat tray's whole card is rotated 180° so its pieces face the
+       right way for whoever's "up top" — but that same rotation makes
+       vertical text read backwards and look garbled. Counter-rotate just the
+       label (and empty-hint) so both trays' text stays upright and aligned
+       to the same spot, while the piece icons keep their intentional flip. */
+    .komadai-flipped .label,
+    .komadai-flipped .empty-hint{
+      transform: rotate(180deg);
     }
 
     #controlsWrap{
       position: fixed;
-      bottom: 10px;
+      bottom: 22px;
       right: 14px;
       gap: 6px;
       z-index: 45;
