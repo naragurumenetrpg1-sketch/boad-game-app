@@ -808,13 +808,12 @@
       transform: rotate(180deg);
     }
 
-    /* Turn edge-glow: centered behind the board and dimmer, instead of a
-       bright full-width strip along the very edge of the screen. */
+    /* Turn edge-glow: full-width like normal, just dimmer than default. */
     .turn-edge-glow{
-      left: 50%;
-      right: auto;
-      transform: translateX(-50%);
-      width: min(72vh, 58vw);
+      left: 0;
+      right: 0;
+      transform: none;
+      width: auto;
       height: 12vh;
       max-height: 60px;
       min-height: 26px;
