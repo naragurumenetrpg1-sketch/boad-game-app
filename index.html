@@ -775,11 +775,7 @@
   const dotsWrap = document.getElementById('pageDots');
   const sliderThumb = document.getElementById('pageSliderThumb');
   const landscapeQuery = window.matchMedia('(orientation: landscape) and (max-height: 600px)');
-
-  function cardsPerPage(){
-    // 横画面は「ページ」に区切らず、全カードを1本の帯にして横スクロールで選ぶ
-    return landscapeQuery.matches ? GAMES.length : 6;
-  }
+  const CLONE_COUNT = 3; // 無限ループ用に前後へ複製しておくカード枚数
 
   function buildCardEl(game){
     const a = document.createElement('a');
@@ -811,20 +807,44 @@
   }
 
   function renderGamePages(){
-    const perPage = cardsPerPage();
     gameGrid.innerHTML = '';
-    const totalPages = Math.ceil(GAMES.length / perPage);
-    for(let p = 0; p < totalPages; p++){
+
+    if(landscapeQuery.matches){
+      // 横画面：ページ分割せず、前後にクローンを足した1本の帯にして無限ループっぽく見せる
       const pageEl = document.createElement('div');
       pageEl.className = 'game-page';
-      GAMES.slice(p * perPage, p * perPage + perPage).forEach(game => {
+      const beforeClones = GAMES.slice(-CLONE_COUNT);
+      const afterClones = GAMES.slice(0, CLONE_COUNT);
+      beforeClones.concat(GAMES, afterClones).forEach(game => {
         pageEl.appendChild(buildCardEl(game));
       });
       gameGrid.appendChild(pageEl);
+      dotsWrap.innerHTML = '';
+
+      // 最初は「本物の1枚目」（＝クローンの直後）を中央に表示した状態から始める
+      requestAnimationFrame(() => {
+        const allCards = gameGrid.querySelectorAll('.game-card');
+        const firstReal = allCards[CLONE_COUNT];
+        if(firstReal){
+          gameGrid.scrollLeft = firstReal.offsetLeft - (gameGrid.clientWidth / 2) + (firstReal.offsetWidth / 2);
+        }
+        updateSliderThumb();
+      });
+    } else {
+      // 縦画面：1ページ6枚のグリッド＋ドット（従来通り）
+      const perPage = 6;
+      const totalPages = Math.ceil(GAMES.length / perPage);
+      for(let p = 0; p < totalPages; p++){
+        const pageEl = document.createElement('div');
+        pageEl.className = 'game-page';
+        GAMES.slice(p * perPage, p * perPage + perPage).forEach(game => {
+          pageEl.appendChild(buildCardEl(game));
+        });
+        gameGrid.appendChild(pageEl);
+      }
+      renderDots(totalPages);
+      gameGrid.scrollLeft = 0;
     }
-    renderDots(totalPages);
-    gameGrid.scrollLeft = 0;
-    updateSliderThumb();
   }
 
   function renderDots(count){
@@ -843,12 +863,38 @@
     dotsWrap.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === idx));
   }
 
-  // 横画面：カード帯のスクロール位置を、下の細いバーの中の白いつまみに反映する
+  // クローンを含めたDOM上のインデックスから、元のGAMES配列上の実インデックスを求める
+  function realIndexOf(extendedIdx){
+    const n = GAMES.length;
+    return ((extendedIdx - CLONE_COUNT) % n + n) % n;
+  }
+
+  // 今、カード帯の中央に一番近いカードのDOM上インデックスを返す
+  function findNearestCardIndex(){
+    const cardEls = gameGrid.querySelectorAll('.game-card');
+    if(!cardEls.length) return -1;
+    const gridRect = gameGrid.getBoundingClientRect();
+    const gridCenter = gridRect.left + gridRect.width / 2;
+    let closestIdx = -1;
+    let closestDist = Infinity;
+    cardEls.forEach((card, i) => {
+      const r = card.getBoundingClientRect();
+      const cardCenter = r.left + r.width / 2;
+      const dist = Math.abs(cardCenter - gridCenter);
+      if(dist < closestDist){ closestDist = dist; closestIdx = i; }
+    });
+    return closestIdx;
+  }
+
+  // 横画面：カード帯の位置を、下の細いバーの中の白いつまみに反映する（実インデックス基準）
   function updateSliderThumb(){
-    if(!sliderThumb) return;
-    const scrollable = gameGrid.scrollWidth - gameGrid.clientWidth;
-    const ratio = scrollable > 0 ? gameGrid.scrollLeft / scrollable : 0;
+    if(!sliderThumb || !landscapeQuery.matches) return;
+    const idx = findNearestCardIndex();
+    if(idx < 0) return;
+    const n = GAMES.length;
+    const rIdx = realIndexOf(idx);
     const thumbPercent = 22; // .page-slider-thumb の width と合わせる
+    const ratio = n > 1 ? rIdx / (n - 1) : 0;
     sliderThumb.style.left = (ratio * (100 - thumbPercent)) + '%';
   }
 
@@ -861,20 +907,28 @@
   function snapToNearestCard(){
     if(!landscapeQuery.matches) return;
     const cardEls = gameGrid.querySelectorAll('.game-card');
-    if(!cardEls.length) return;
-    const gridRect = gameGrid.getBoundingClientRect();
-    const gridCenter = gridRect.left + gridRect.width / 2;
-    let closest = null;
-    let closestDist = Infinity;
-    cardEls.forEach(card => {
-      const r = card.getBoundingClientRect();
-      const cardCenter = r.left + r.width / 2;
-      const dist = Math.abs(cardCenter - gridCenter);
-      if(dist < closestDist){ closestDist = dist; closest = card; }
-    });
-    if(closest){
-      const target = closest.offsetLeft - (gameGrid.clientWidth / 2) + (closest.offsetWidth / 2);
-      gameGrid.scrollTo({ left: target, behavior: 'smooth' });
+    const idx = findNearestCardIndex();
+    if(idx < 0) return;
+    const closest = cardEls[idx];
+    const target = closest.offsetLeft - (gameGrid.clientWidth / 2) + (closest.offsetWidth / 2);
+    gameGrid.scrollTo({ left: target, behavior: 'smooth' });
+    // スムーズスナップが落ち着いた頃合いで、クローン領域なら本物側へこっそり戻す
+    clearTimeout(loopFixTimer);
+    loopFixTimer = setTimeout(() => fixLoopPosition(idx), 380);
+  }
+
+  // クローン側で止まっていたら、見た目が同じ「本物」カードの位置へ瞬時に移す（無限ループの種明かし部分）
+  let loopFixTimer = null;
+  function fixLoopPosition(idx){
+    if(!landscapeQuery.matches) return;
+    const n = GAMES.length;
+    if(idx < CLONE_COUNT || idx >= CLONE_COUNT + n){
+      const cardEls = gameGrid.querySelectorAll('.game-card');
+      const rIdx = realIndexOf(idx);
+      const target = cardEls[CLONE_COUNT + rIdx];
+      if(target){
+        gameGrid.scrollLeft = target.offsetLeft - (gameGrid.clientWidth / 2) + (target.offsetWidth / 2);
+      }
     }
   }
 
@@ -891,7 +945,7 @@
 
   renderGamePages();
 
-  // 縦横が切り替わったら1ページあたりの枚数を組み直す
+  // 縦横が切り替わったら組み直す
   if(landscapeQuery.addEventListener){
     landscapeQuery.addEventListener('change', renderGamePages);
   } else if(landscapeQuery.addListener){
