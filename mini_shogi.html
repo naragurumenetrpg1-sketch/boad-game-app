@@ -263,20 +263,15 @@
     background: linear-gradient(to top, rgba(255,255,255,0.55), rgba(255,255,255,0));
   }
   .turn-edge-glow.active{
-    opacity:1;
-    animation: edgeGlowPulse 1.8s ease-in-out infinite;
-  }
-  @keyframes edgeGlowPulse{
-    0%,100%{ opacity:0.75; }
-    50%{ opacity:1; }
+    opacity: 0.85;
   }
   .turn-edge-glow.flash{
-    animation: edgeGlowFlash .5s ease, edgeGlowPulse 1.8s ease-in-out .5s infinite;
+    animation: edgeGlowFlash .5s ease forwards;
   }
   @keyframes edgeGlowFlash{
     0%{ opacity:0.3; }
     45%{ opacity:1; }
-    100%{ opacity:0.75; }
+    100%{ opacity:0.85; }
   }
 
   /* --- board row: opponent's tray above, your tray below the board --- */
@@ -825,19 +820,15 @@
       background: linear-gradient(to top, rgba(255,255,255,0.26), rgba(255,255,255,0));
     }
     .turn-edge-glow.active{
-      animation: edgeGlowPulseSoft 1.8s ease-in-out infinite;
+      opacity: 0.4;
     }
     .turn-edge-glow.flash{
-      animation: edgeGlowFlashSoft .5s ease, edgeGlowPulseSoft 1.8s ease-in-out .5s infinite;
-    }
-    @keyframes edgeGlowPulseSoft{
-      0%,100%{ opacity:0.32; }
-      50%{ opacity:0.5; }
+      animation: edgeGlowFlashSoft .5s ease forwards;
     }
     @keyframes edgeGlowFlashSoft{
       0%{ opacity:0.12; }
       45%{ opacity:0.55; }
-      100%{ opacity:0.32; }
+      100%{ opacity:0.4; }
     }
 
     #controlsWrap{
