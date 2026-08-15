@@ -795,11 +795,50 @@
     /* The far-seat tray's whole card is rotated 180° so its pieces face the
        right way for whoever's "up top" — but that same rotation makes
        vertical text read backwards and look garbled. Counter-rotate just the
-       label (and empty-hint) so both trays' text stays upright and aligned
-       to the same spot, while the piece icons keep their intentional flip. */
+       label (and empty-hint) so both trays' text stays upright, while the
+       piece icons keep their intentional flip. The 180° rotation also
+       reverses which end of the stack appears "first" visually, so we
+       reverse the child order too — the two reversals cancel out, landing
+       the label at the top of both trays, matching the near-seat tray. */
+    .komadai-flipped{
+      flex-direction: column-reverse;
+    }
     .komadai-flipped .label,
     .komadai-flipped .empty-hint{
       transform: rotate(180deg);
+    }
+
+    /* Turn edge-glow: centered behind the board and dimmer, instead of a
+       bright full-width strip along the very edge of the screen. */
+    .turn-edge-glow{
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+      width: min(72vh, 58vw);
+      height: 12vh;
+      max-height: 60px;
+      min-height: 26px;
+    }
+    .turn-edge-glow.top{
+      background: linear-gradient(to bottom, rgba(255,255,255,0.26), rgba(255,255,255,0));
+    }
+    .turn-edge-glow.bottom{
+      background: linear-gradient(to top, rgba(255,255,255,0.26), rgba(255,255,255,0));
+    }
+    .turn-edge-glow.active{
+      animation: edgeGlowPulseSoft 1.8s ease-in-out infinite;
+    }
+    .turn-edge-glow.flash{
+      animation: edgeGlowFlashSoft .5s ease, edgeGlowPulseSoft 1.8s ease-in-out .5s infinite;
+    }
+    @keyframes edgeGlowPulseSoft{
+      0%,100%{ opacity:0.32; }
+      50%{ opacity:0.5; }
+    }
+    @keyframes edgeGlowFlashSoft{
+      0%{ opacity:0.12; }
+      45%{ opacity:0.55; }
+      100%{ opacity:0.32; }
     }
 
     #controlsWrap{
