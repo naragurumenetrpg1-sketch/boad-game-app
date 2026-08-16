@@ -775,7 +775,7 @@
   const dotsWrap = document.getElementById('pageDots');
   const sliderThumb = document.getElementById('pageSliderThumb');
   const landscapeQuery = window.matchMedia('(orientation: landscape) and (max-height: 600px)');
-  const CLONE_COUNT = 3; // 無限ループ用に前後へ複製しておくカード枚数
+  const CLONE_COUNT = GAMES.length; // 無限ループ用に前後へ複製しておくカード枚数（行き止まりを防ぐため全件分を複製）
 
   function buildCardEl(game){
     const a = document.createElement('a');
