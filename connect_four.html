@@ -24,13 +24,13 @@
     --ink: #141414;
     --hairline: rgba(255,255,255,0.14);
 
-    /* --- ebonized wood material tokens --- */
-    --wood-deep: #030303;
+    /* --- matte anodized material tokens (flat, monochrome, low-contrast) --- */
+    --wood-deep: #060606;
     --wood-mid: #131313;
-    --wood-light: #242424;
-    --brass: #b8b8b8;
-    --brass-dim: rgba(255,255,255,0.14);
-    --brass-glow: rgba(255,255,255,0.55);
+    --wood-light: #1c1c1c;
+    --brass: #a8a8a8;
+    --brass-dim: rgba(255,255,255,0.10);
+    --brass-glow: rgba(255,255,255,0.45);
   }
 
   *{ box-sizing:border-box; }
@@ -243,15 +243,15 @@
     border-radius: 9px;
     overflow:hidden;
     background:
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.026 0.006' numOctaves='6' seed='11' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.34 0.34 0.34 0 0 0.34 0.34 0.34 0 0 0.34 0.34 0.34 0 0 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E") no-repeat,
-      radial-gradient(150% 130% at 28% -12%, var(--wood-light) 0%, var(--wood-mid) 46%, var(--wood-deep) 100%);
-    background-size: 122% 100%, cover;
-    background-blend-mode: overlay, normal;
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='b'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='7' result='n'/%3E%3CfeColorMatrix in='n' type='matrix' values='0.25 0.25 0.25 0 0 0.25 0.25 0.25 0 0 0.25 0.25 0.25 0 0 0 0 0 0.45 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23b)'/%3E%3C/svg%3E") repeat,
+      radial-gradient(160% 130% at 50% -6%, var(--wood-light) 0%, var(--wood-mid) 58%, var(--wood-deep) 100%);
+    background-size: 140px 140px, cover;
+    background-blend-mode: soft-light, normal;
     box-shadow:
-      0 26px 44px rgba(0,0,0,0.75),
-      0 3px 0 rgba(0,0,0,0.55),
+      0 22px 38px rgba(0,0,0,0.7),
+      0 3px 0 rgba(0,0,0,0.5),
       inset 0 0 0 1px var(--brass-dim),
-      inset 0 -12px 20px rgba(0,0,0,0.6);
+      inset 0 -10px 16px rgba(0,0,0,0.5);
     transform: rotateX(5deg);
     transform-origin: 50% 100%;
     touch-action: none;
